@@ -1,0 +1,71 @@
+direction: left
+
+classes: {
+  ent-g: {
+    style: {
+      border-radius: 10
+      fill: "#D5E8D4"
+      stroke: "#82B366"
+    }
+  }
+
+  ent-r: {
+    style: {
+      border-radius: 10
+      fill: "#F8CECC"
+      stroke: "#B95652"
+    }
+  }
+
+  rel: {
+    shape: diamond
+    style: {
+      fill: "#FFE6CC"
+      stroke: "#D79B00"
+    }
+  }
+
+  attr: {
+    shape: oval
+    style: {
+      fill: "#E1D5E7"
+      stroke: "#9673A6"
+    }
+  }
+}
+
+Демон.class: ent-r
+
+ОС.class: ent-g
+Контроллер.class: ent-g
+Пользователь.class: ent-g
+Процесс.class: ent-g
+Контейнер.class: ent-g
+
+Взаимодействует.class: rel
+Передает информацию.class: rel
+Вызывает.class: rel
+Исполняет.class: rel
+Содержит.class: rel
+Контроллирует.class: rel
+
+Ресурсы контейнера.class: attr
+Окружение.class: attr
+Linux namespaces.class: attr
+Ресурсы процесса.class: attr
+Файл.class: attr
+
+Пользователь -> Вызывает -> Контроллер <-> Передает информацию <-> Демон
+Демон <-> Взаимодействует <-> ОС
+
+Контейнер <- Содержит -> Процесс
+
+Демон -> Исполняет -> Процесс
+Демон -> Контроллирует -> Контейнер
+
+Процесс -- Файл
+Процесс -- Ресурсы процесса
+
+Контейнер -- Ресурсы контейнера
+Контейнер -- Окружение
+Контейнер -- Linux namespaces
