@@ -4,8 +4,8 @@
 
 #include <dasboot/cli/cli.hpp>
 
-TEST(CliUt, Square) {
-    ASSERT_EQ(NCli::Square(5), 25);
+TEST(CliUt, NoTest) {
+    ASSERT_EQ(0, 0);
 }
 
 int main(int argc, char** argv) {

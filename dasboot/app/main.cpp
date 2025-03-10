@@ -3,7 +3,6 @@
 
 #include <dasboot/cli/cli.hpp>
 
-int main() {
-    std::cout << "Square(5) = " << NCli::Square(5) << std::endl;
+int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[]) {
 	return 0;
 }
