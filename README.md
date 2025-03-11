@@ -42,7 +42,7 @@ cmake .. && \
 cmake --build . && \
 sudo cmake --install . && \
 cd ../../ && \
-rm -rf CLI11/ && \
+rm -rf CLI11/
 ```
 
 ### Install GTest
