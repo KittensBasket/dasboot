@@ -34,6 +34,29 @@ endif()
 
 # End flags
 
+
+# Start  clang-tidy
+
+find_program(CLANG_TIDY_COMMAND NAMES clang-tidy)
+
+if(NOT CLANG_TIDY_COMMAND)
+    message(WARNING "Clang-tidy is not found!")
+    set(CMAKE_CXX_CLANG_TIDY "" CACHE STRING "" FORCE)
+else()
+    message(STATUS "Clang-tidy is ON")
+
+    # Google C++ Style
+    set(CLANGTIDY_EXTRA_ARGS
+        "-checks=google-*"
+    )
+
+    set(CMAKE_CXX_CLANG_TIDY "${CLANG_TIDY_COMMAND};-p=${CMAKE_BINARY_DIR};${CLANGTIDY_EXTRA_ARGS}" CACHE STRING "" FORCE)
+endif()
+
+
+# End clang-tidy
+
+
 project(dasboot LANGUAGES CXX)
 
 include_directories(.)
