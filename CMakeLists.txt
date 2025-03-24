@@ -1,8 +1,17 @@
 cmake_minimum_required (VERSION 3.22.1)
 
+# Find compilers
+
+find_program(CMAKE_CXX_COMPILER NAMES g++ clang clang++)
+if (NOT CMAKE_CXX_COMPILER)
+    message(WARNING "Compiler is not found!")
+else()
+    message("-- Current compiler : ${CMAKE_CXX_COMPILER}")
+endif()
+
 # Start flags
 
-if((CMAKE_CXX_COMPILER_ID MATCHES "GNU") OR (CMAKE_CXX_COMPILER_ID MATCHES "Clang"))
+if (CMAKE_CXX_COMPILER)
     add_compile_options(
         -Werror
 
