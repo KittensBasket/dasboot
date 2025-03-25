@@ -1,59 +1,113 @@
 #pragma once
 
-#include <cstddef>
-#include <nlohmann/json.hpp>
-#include <fstream>
+#include <optional>
 #include <string>
-#include <vector>
+
+#include <message.pb.h>
 
 #define DAEMON_SOCK_ADDR "192.168.1.1:25565" // JTB, TBD
 #define DEFAULT_CONFIG "/lib/dasboot/config/default_config.json" // JTB, TBD
 
+#define TProtobuf bool
+
 namespace NController {
     using std::string;
-    using std::ifstream;
-    using std::vector;
+    using std::optional;
 
-    using TJson = nlohmann::json;
+    struct TReferencingRule {
+        string Reference;
+        bool IsReferencingById;
+
+        TReferencingRule(const string& reference = NULL, const bool isReferencingById = true) {
+            Reference = reference;
+            IsReferencingById = isReferencingById;
+        }
+        ~TReferencingRule();
+    };
+
+    struct TBuildSettings {
+        string PathToDasbootFile;
+
+        optional<string> ContainerName;
+    };
+
+    struct TStartSettings {
+        TReferencingRule Container;
+
+        TStartSettings(const TReferencingRule& container) {
+            Container = container;
+        }
+        ~TStartSettings();
+    };
+
+    struct TStopSettings {
+        TReferencingRule Container;
+
+        TStopSettings(const TReferencingRule&  container) {
+            Container = container;
+        }
+        ~TStopSettings();
+    };
+
+    struct TRemoveSettings {
+        TReferencingRule Container;
+
+        TRemoveSettings(const TReferencingRule& container) {
+            Container = container;
+        }
+        ~TRemoveSettings();
+    };
+
+    struct TExecuteSettings {
+        TReferencingRule Container;
+        string Command;
+        string Args;
+
+        optional<bool> backgroundFlag;  
+
+        TExecuteSettings(const TReferencingRule& container, const string command, const string args) {
+            Container = container;
+            Command = command;
+            Args = args;
+        }
+        ~TExecuteSettings();
+    };
+
+    struct TListSettings {
+        optional<bool> showAllFlag;
+    };
 
     class TController final {
         private:
             std::string daemonSockAddr;
             int daemonSocket; // replace with lib socket type, JBD, TBD
 
-            TJson request;
-            TJson response;
-
-            // REPLACE BOOL WITH ERROR TYPE, JBD
-            bool ConnectToDaemon();
-
+            TProtobuf request;
+            TProtobuf response;
         public:
-            TController(const std::string daemonSockAddr = DAEMON_SOCK_ADDR);
-            ~TController();
+            TController(const std::string daemonSockAddr = DAEMON_SOCK_ADDR) {};
+            ~TController() {};
 
-            TJson WriteToDaemon();
-            TJson ReadFromDaemon();
+            bool WriteToDaemon();
+            bool ReadFromDaemon();
 
             // These ask TGlobalConfig:
-            TJson Version();
-            TJson Info();
-            TJson Help();
-            TJson CommandHelp(const std::string command);
+            TProtobuf Version();
+            TProtobuf Info();
+            TProtobuf Help();
+            TProtobuf CommandHelp(const std::string command);
 
-            // These ones ask Daemon:
-            // Here, replace all bool with own error type (or maybe JSON), JBD, TBD
-            // Replace rand() with custom random name or id generation
-            bool Build();
-            bool Build(const string& dasbootFilePath = DEFAULT_CONFIG, const std::string& containerName = std::to_string(rand()));
-            bool Start(const string& containerName);
-            bool Run(const string& dasbootFilePath = DEFAULT_CONFIG, const std::string& containerName = std::to_string(rand()));
-            bool Stop(const string& containerName);
-            bool Remove(const string& containerName);
+            // These work with Daemon:
+            bool Build(const TBuildSettings& buildSettings);
 
-            bool Execute(const string& containerName, const string& command, const vector<string>& args = {}, const bool backgroundFlag = false);
-            bool Attach(const string& containerName, const bool noStdinFlag = false);
+            bool Start(const TStartSettings& startSettings);
 
-            bool List(const bool allFlag = false);
+            bool Stop(const TStopSettings& stopSettings);
+            bool Remove(const TRemoveSettings& removeSettings);
+
+            bool Execute(const TExecuteSettings& executeSettings);
+
+            bool List(const TListSettings& listSettings);
     };
 
     class TGlobalConfig final {};

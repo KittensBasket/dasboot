@@ -1,17 +1,20 @@
 # source:
 
-find_package(nlohmann_json 3.11.3 REQUIRED)
+find_package(protobuf REQUIRED)
+set(PROTO_SOURCES message.proto)
+add_library(proto ${PROTO_SOURCES})
+target_include_directories(proto INTERFACE ${CMAKE_CURRENT_BINARY_DIR})
+target_link_libraries(
+    proto
+    PUBLIC
+    protobuf::libprotobuf
+)
+protobuf_generate(TARGET proto LANGUAGE cpp)
 
 set(SOURCES controller.cpp)
 set(HEADERS controller.hpp)
 add_library(controller ${SOURCES} ${HEADERS})
-target_include_directories(controller PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
-
-target_link_libraries(
-    controller 
-    PRIVATE 
-    nlohmann_json::nlohmann_json
-    )
+target_include_directories(controller PUBLIC ${CMAKE_CURRENT_BINARY_DIR})
 
 # tests:
 
@@ -23,6 +26,7 @@ target_link_libraries(
     controller_ut
     PRIVATE
     GTest::GTest
+    proto
     controller
 )
 

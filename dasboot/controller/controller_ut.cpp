@@ -2,8 +2,10 @@
 
 #include <dasboot/controller/controller.hpp>
 
-TEST(CliUt, NoTest) {
-    ASSERT_EQ(0, 0);
+TEST(ControllerUt, BuildContainer) {
+    NController::TController controller;
+    NController::TBuildSettings buildSettings;
+    ASSERT_EQ(controller.Build(buildSettings), false);
 }
 
 int main(int argc, char** argv) {
