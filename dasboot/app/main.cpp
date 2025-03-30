@@ -3,6 +3,9 @@
 
 #include <dasboot/cli/cli.hpp>
 
-int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[]) {
-	return 0;
+int main(int argc, char* argv[]) {
+    NCli::TMainSettings settings;
+    auto parser = NCli::MakeDasbootParser(settings);
+    parser->Parse(argc, argv);
+    return 0;
 }
