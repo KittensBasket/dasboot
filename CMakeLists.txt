@@ -2,9 +2,9 @@ cmake_minimum_required (VERSION 3.22.1)
 
 # Find compilers
 
-find_program(CMAKE_CXX_COMPILER NAMES g++ clang clang++)
+find_program(CMAKE_CXX_COMPILER NAMES clang++)
 if (NOT CMAKE_CXX_COMPILER)
-    message(WARNING "Compiler is not found!")
+    message(FATAL_ERROR "Compiler is not found!")
 else()
     message("-- Current compiler : ${CMAKE_CXX_COMPILER}")
 endif()
@@ -49,14 +49,14 @@ endif()
 find_program(CLANG_TIDY_COMMAND NAMES clang-tidy)
 
 if(NOT CLANG_TIDY_COMMAND)
-    message(WARNING "Clang-tidy is not found!")
-    set(CMAKE_CXX_CLANG_TIDY "" CACHE STRING "" FORCE)
+    message(FATAL_ERROR "Clang-tidy is not found!")
 else()
     message(STATUS "Clang-tidy is ON")
 
     # Google C++ Style
     set(CLANGTIDY_EXTRA_ARGS
         "-checks=google-*"
+        "-warnings-as-errors=*"
     )
 
     set(CMAKE_CXX_CLANG_TIDY "${CLANG_TIDY_COMMAND};-p=${CMAKE_BINARY_DIR};${CLANGTIDY_EXTRA_ARGS}" CACHE STRING "" FORCE)
