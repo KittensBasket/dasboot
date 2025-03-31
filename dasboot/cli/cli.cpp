@@ -53,7 +53,7 @@ namespace NCli {
 
     // There will be constant values with dasboot's descriptions
     namespace {
-        std::string DasbootDescription = "A small containerization utility, written in C/C++. Made as team pet project.";
+        static const std::string DasbootDescription = "A small containerization utility, written in C/C++. Made as team pet project.";
     } // anonymous namespace
 
 
