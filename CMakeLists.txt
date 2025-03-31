@@ -1,5 +1,9 @@
 cmake_minimum_required (VERSION 3.22.1)
 
+# Install dependencies
+execute_process(COMMAND bash ../install_dependencies.sh)
+
+
 # Find compilers
 
 find_program(CMAKE_CXX_COMPILER NAMES clang++)
