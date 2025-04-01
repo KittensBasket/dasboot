@@ -1,8 +1,17 @@
 cmake_minimum_required (VERSION 3.22.1)
 
+# Find compilers
+
+find_program(CMAKE_CXX_COMPILER NAMES clang++)
+if (NOT CMAKE_CXX_COMPILER)
+    message(FATAL_ERROR "Compiler is not found!")
+else()
+    message("-- Current compiler : ${CMAKE_CXX_COMPILER}")
+endif()
+
 # Start flags
 
-if((CMAKE_CXX_COMPILER_ID MATCHES "GNU") OR (CMAKE_CXX_COMPILER_ID MATCHES "Clang"))
+if (CMAKE_CXX_COMPILER)
     add_compile_options(
         -Werror
 
@@ -33,6 +42,29 @@ if(NOT CMAKE_CXX_EXTENSIONS)
 endif()
 
 # End flags
+
+
+# Start  clang-tidy
+
+find_program(CLANG_TIDY_COMMAND NAMES clang-tidy)
+
+if(NOT CLANG_TIDY_COMMAND)
+    message(FATAL_ERROR "Clang-tidy is not found!")
+else()
+    message(STATUS "Clang-tidy is ON")
+
+    # Google C++ Style
+    set(CLANGTIDY_EXTRA_ARGS
+        "-checks=google-*"
+        "-warnings-as-errors=*"
+    )
+
+    set(CMAKE_CXX_CLANG_TIDY "${CLANG_TIDY_COMMAND};-p=${CMAKE_BINARY_DIR};${CLANGTIDY_EXTRA_ARGS}" CACHE STRING "" FORCE)
+endif()
+
+
+# End clang-tidy
+
 
 project(dasboot LANGUAGES CXX)
 

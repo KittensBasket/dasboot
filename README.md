@@ -7,6 +7,7 @@ A small containerization utility, written in C/C++. Made as team pet project.
 To build this project first time, the following programs should be installed in your operating system:
 * [CMake](#install-CMake);
 * [Clang](#install-clang);
+* [Clang-tidy](#install-clang-tidy);
 * [CLI11](#install-cli11);
 * [GTest](#install-gtest).
 
@@ -28,6 +29,12 @@ sudo apt install -y cmake
 
 ```bash
 sudo apt install -y clang
+```
+
+### Install Clang-tidy
+
+```bash
+sudo apt install -y clang-tidy
 ```
 
 ### Install CLI11
