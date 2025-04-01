@@ -1,0 +1,24 @@
+syntax = "proto3";
+
+package NMessages;
+
+enum ReturnCode {
+  SUCESS = 0;
+  ERROR = 1;
+}
+
+message TArg {
+  string name = 1;
+  string value = 2;
+}
+
+message TRequest {
+  string type = 1;
+  repeated TArg args = 2;
+}
+
+message TResponse {
+  ReturnCode returnCode = 1;
+  string reuturnMessage = 2;
+  string returnData = 3;
+}

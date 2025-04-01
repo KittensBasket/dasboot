@@ -1,27 +1,27 @@
 #pragma once
 
-#include <optional>
 #include <string>
+#include <optional>
+#include <stdlib.h>
 
-#include <message.pb.h>
+#include <../proto/messages.pb.h>
 
-#define DAEMON_SOCK_ADDR "192.168.1.1:25565" // JTB, TBD
-#define DEFAULT_CONFIG "/lib/dasboot/config/default_config.json" // JTB, TBD
-
-#define TProtobuf bool
+#define TZeroMQSocket int // temporary solution
 
 namespace NController {
+    using NMessages::TArg;
+    using NMessages::TRequest;
+    using NMessages::TResponse;
+
     using std::string;
     using std::optional;
 
+    /* All of these used for request construction: */
     struct TReferencingRule {
         string Reference;
         bool IsReferencingById;
 
-        TReferencingRule(const string& reference = NULL, const bool isReferencingById = true) {
-            Reference = reference;
-            IsReferencingById = isReferencingById;
-        }
+        TReferencingRule(const string& reference = NULL, const bool isReferencingById = true);
         ~TReferencingRule();
     };
 
@@ -34,27 +34,21 @@ namespace NController {
     struct TStartSettings {
         TReferencingRule Container;
 
-        TStartSettings(const TReferencingRule& container) {
-            Container = container;
-        }
+        TStartSettings(const TReferencingRule& container);
         ~TStartSettings();
     };
 
     struct TStopSettings {
         TReferencingRule Container;
 
-        TStopSettings(const TReferencingRule&  container) {
-            Container = container;
-        }
+        TStopSettings(const TReferencingRule&  container);
         ~TStopSettings();
     };
 
     struct TRemoveSettings {
         TReferencingRule Container;
 
-        TRemoveSettings(const TReferencingRule& container) {
-            Container = container;
-        }
+        TRemoveSettings(const TReferencingRule& container);
         ~TRemoveSettings();
     };
 
@@ -65,11 +59,7 @@ namespace NController {
 
         optional<bool> backgroundFlag;  
 
-        TExecuteSettings(const TReferencingRule& container, const string command, const string args) {
-            Container = container;
-            Command = command;
-            Args = args;
-        }
+        TExecuteSettings(const TReferencingRule& container, const string command, const string args);
         ~TExecuteSettings();
     };
 
@@ -77,28 +67,37 @@ namespace NController {
         optional<bool> showAllFlag;
     };
 
+    /* Used for default configurations retrievment: */
+    class TGlobalConfig final {
+        public:
+            TGlobalConfig();
+            ~TGlobalConfig();
+
+            string GetDaemonPort();
+
+            string GetDefaultConfigPath();
+    };
+
     class TController final {
         private:
-            std::string daemonSockAddr;
-            int daemonSocket; // replace with lib socket type, JBD, TBD
+            TGlobalConfig globalConfig;
+            TZeroMQSocket daemonSocket;
 
-            TProtobuf request;
-            TProtobuf response;
         public:
-            TController(const std::string daemonSockAddr = DAEMON_SOCK_ADDR) {};
-            ~TController() {};
+            TController();
+            ~TController();
 
             bool WriteToDaemon();
             bool ReadFromDaemon();
 
-            // These ask TGlobalConfig:
-            TProtobuf Version();
-            TProtobuf Info();
-            TProtobuf Help();
-            TProtobuf CommandHelp(const std::string command);
+            // These ask globalConfig:
+            bool Version();
+            bool Info();
+            bool Help();
+            bool CommandHelp(const std::string command);
 
             // These work with Daemon:
-            bool Build(const TBuildSettings& buildSettings);
+            TRequest Build(const TBuildSettings& buildSettings);
 
             bool Start(const TStartSettings& startSettings);
 
@@ -109,6 +108,4 @@ namespace NController {
 
             bool List(const TListSettings& listSettings);
     };
-
-    class TGlobalConfig final {};
 };
