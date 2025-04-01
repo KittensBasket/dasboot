@@ -6,10 +6,6 @@ A small containerization utility, written in C/C++. Made as team pet project.
 
 To build this project first time, the following programs should be installed in your operating system:
 * [CMake](#install-CMake);
-* [Clang](#install-clang);
-* [Clang-tidy](#install-clang-tidy);
-* [CLI11](#install-cli11);
-* [GTest](#install-gtest).
 
 After that, you build project.
 
@@ -23,39 +19,6 @@ sudo apt update
 
 ```bash
 sudo apt install -y cmake
-```
-
-### Install Clang
-
-```bash
-sudo apt install -y clang
-```
-
-### Install Clang-tidy
-
-```bash
-sudo apt install -y clang-tidy
-```
-
-### Install CLI11
-
-```bash
-git clone https://github.com/CLIUtils/CLI11 && \
-cd CLI11/ && \
-mkdir build && \
-cd build && \
-git submodule update --init && \
-cmake .. && \
-cmake --build . && \
-sudo cmake --install . && \
-cd ../../ && \
-rm -rf CLI11/
-```
-
-### Install GTest
-
-```bash
-sudo apt install -y libgtest-dev
 ```
 
 ### Build and compile
