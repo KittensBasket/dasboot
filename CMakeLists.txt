@@ -1,7 +1,36 @@
 cmake_minimum_required (VERSION 3.22.1)
 
 # Install dependencies
-execute_process(COMMAND bash ../install_dependencies.sh)
+
+include(FetchContent)
+
+execute_process(COMMAND sudo apt-get update)
+
+execute_process(COMMAND sudo apt-get install -y clang)
+
+find_program(CMAKE_CXX_COMPILER NAMES clang++)
+message(STATUS "C++ compiler: ${CMAKE_CXX_COMPILER}")
+
+execute_process(COMMAND sudo apt-get install -y clang-tidy)
+
+execute_process(COMMAND sudo apt-get install -y libgtest-dev)
+
+FetchContent_Declare(
+        cli11
+        QUIET
+        GIT_REPOSITORY https://github.com/CLIUtils/CLI11
+        GIT_TAG v2.5.0
+        OVERRIDE_FIND_PACKAGE
+)
+
+FetchContent_MakeAvailable(cli11)
+
+add_executable(app ./dasboot/app/main.cpp)
+target_include_directories(app PRIVATE ./dasboot/cli)
+target_link_libraries(app PRIVATE CLI11::CLI11)
+
+# End Install dependencies
+
 
 
 # Find compilers
