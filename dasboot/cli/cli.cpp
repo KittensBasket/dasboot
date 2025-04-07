@@ -61,4 +61,4 @@ namespace NCli {
         std::unique_ptr<TParser> parser(new TParser{DasbootDescription});
         return parser;
     }
-};
+}; // namespace NCli
