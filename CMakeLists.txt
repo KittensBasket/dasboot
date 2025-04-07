@@ -15,23 +15,10 @@ execute_process(COMMAND sudo apt-get install -y clang-tidy)
 
 execute_process(COMMAND sudo apt-get install -y libgtest-dev)
 
-FetchContent_Declare(
-        cli11
-        QUIET
-        GIT_REPOSITORY https://github.com/CLIUtils/CLI11
-        GIT_TAG v2.5.0
-        OVERRIDE_FIND_PACKAGE
-)
-
-FetchContent_MakeAvailable(cli11)
-
-add_executable(make_lib_cli ./dasboot/cli/cli.cpp)
-# target_include_directories(app PRIVATE ./dasboot/cli)
-target_link_libraries(make_lib_cli PRIVATE CLI11::CLI11)
-
-# End Install dependencies
-
-
+find_package(CLI11)
+if (NOT CLI11_FOUND)
+    execute_process(COMMAND bash ../install_cli11.sh)
+endif()
 
 # Find compilers
 
