@@ -25,9 +25,9 @@ FetchContent_Declare(
 
 FetchContent_MakeAvailable(cli11)
 
-add_executable(app ./dasboot/app/main.cpp)
-target_include_directories(app PRIVATE ./dasboot/cli)
-target_link_libraries(app PRIVATE CLI11::CLI11)
+add_executable(make_lib_cli ./dasboot/cli/cli.cpp)
+# target_include_directories(app PRIVATE ./dasboot/cli)
+target_link_libraries(make_lib_cli PRIVATE CLI11::CLI11)
 
 # End Install dependencies
 
