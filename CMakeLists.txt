@@ -1,5 +1,25 @@
 cmake_minimum_required (VERSION 3.22.1)
 
+# Install dependencies
+
+include(FetchContent)
+
+execute_process(COMMAND sudo apt-get update)
+
+execute_process(COMMAND sudo apt-get install -y clang)
+
+find_program(CMAKE_CXX_COMPILER NAMES clang++)
+message(STATUS "C++ compiler: ${CMAKE_CXX_COMPILER}")
+
+execute_process(COMMAND sudo apt-get install -y clang-tidy)
+
+execute_process(COMMAND sudo apt-get install -y libgtest-dev)
+
+find_package(CLI11)
+if (NOT CLI11_FOUND)
+    execute_process(COMMAND bash ../install_cli11.sh)
+endif()
+
 # Find compilers
 
 find_program(CMAKE_CXX_COMPILER NAMES clang++)
@@ -81,3 +101,4 @@ if(NOT MYLIB_TESTING)
 else()
     enable_testing()
 endif()
+
