@@ -9,3 +9,4 @@ cmake --build . && \
 sudo cmake --install . && \
 cd ../../ && \
 rm -rf CLI11/
+

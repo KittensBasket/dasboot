@@ -101,3 +101,4 @@ if(NOT MYLIB_TESTING)
 else()
     enable_testing()
 endif()
+
