@@ -1,7 +1,5 @@
 # source:
 
-find_package(CLI11 REQUIRED)
-
 set(SOURCES cli.cpp)
 set(HEADERS cli.hpp)
 add_library(cli ${SOURCES} ${HEADERS})
@@ -21,4 +19,4 @@ target_link_libraries(
     cli
 )
 
-add_test(tape_gtests cli_ut)
+add_test(cli_gtests cli_ut)
