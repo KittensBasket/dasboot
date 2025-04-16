@@ -7,6 +7,7 @@ enum ReturnCode {
   ERROR = 1;
 }
 
+// TO DO: later change TArg for every command
 message TArg {
   string name = 1;
   string value = 2;

@@ -21,14 +21,12 @@ namespace NController {
     }
 
     TExecuteSettings::TExecuteSettings(const TReferencingRule& container, 
-    const string command, const string args) {
+    const string& command, const string& args, const bool backgroundFlag) {
         Container = container;
         Command = command;
         Args = args;
+        BackgroundFlag = backgroundFlag;
     }
-
-    TGlobalConfig::TGlobalConfig() {}
-    TGlobalConfig::~TGlobalConfig() {}
 
     TController::TController() {
         globalConfig = TGlobalConfig();
@@ -49,4 +47,4 @@ namespace NController {
 
         return request;
     }
-}
+} // namespace NController

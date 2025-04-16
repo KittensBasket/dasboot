@@ -6,7 +6,7 @@
 
 #include <../proto/messages.pb.h>
 
-#define TZeroMQSocket int // temporary solution
+#define TZeroMQSocket int // TODO: VoidZeroNull0, temporary solution
 
 namespace NController {
     using NMessages::TArg;
@@ -56,23 +56,19 @@ namespace NController {
         TReferencingRule Container;
         string Command;
         string Args;
+        bool BackgroundFlag;
 
-        optional<bool> backgroundFlag;  
-
-        TExecuteSettings(const TReferencingRule& container, const string command, const string args);
+        TExecuteSettings(const TReferencingRule& container, const string& command, const string& args, const bool backgroundFlag);
         ~TExecuteSettings();
     };
 
     struct TListSettings {
-        optional<bool> showAllFlag;
+        bool ShowAllFlag;
     };
 
     /* Used for default configurations retrievment: */
     class TGlobalConfig final {
         public:
-            TGlobalConfig();
-            ~TGlobalConfig();
-
             string GetDaemonPort();
 
             string GetDefaultConfigPath();

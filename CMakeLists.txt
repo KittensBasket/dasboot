@@ -1,5 +1,7 @@
 cmake_minimum_required (VERSION 3.22.1)
 
+project(dasboot LANGUAGES CXX)
+
 # Install dependencies
 
 include(FetchContent)
@@ -18,6 +20,11 @@ execute_process(COMMAND sudo apt-get install -y libgtest-dev)
 find_package(CLI11)
 if (NOT CLI11_FOUND)
     execute_process(COMMAND bash ../install_cli11.sh)
+endif()
+
+find_package(protobuf)
+if (NOT protobuf_FOUND)
+    execute_process(COMMAND bash ../install_protobuf.sh)
 endif()
 
 # Find compilers
@@ -53,7 +60,8 @@ if (CMAKE_CXX_COMPILER)
         -Wsign-promo
         -Wzero-as-null-pointer-constant
 
-        -Ofast
+        -O3
+        -ffast-math
     )
 endif()
 
@@ -84,9 +92,6 @@ endif()
 
 
 # End clang-tidy
-
-
-project(dasboot LANGUAGES CXX)
 
 include_directories(.)
 
