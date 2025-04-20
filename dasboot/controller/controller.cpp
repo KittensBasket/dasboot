@@ -6,7 +6,6 @@ namespace NController {
         Reference = reference;
         IsReferencingById = isReferencingById;
     }
-    TReferencingRule::~TReferencingRule() {};
 
     TStartSettings::TStartSettings(const TReferencingRule& container) {
         Container = container;
@@ -31,7 +30,6 @@ namespace NController {
     TController::TController() {
         globalConfig = TGlobalConfig();
     }
-    TController::~TController() {};
 
     TRequest TController::Build(const TBuildSettings& buildSettings) {
         TRequest request;

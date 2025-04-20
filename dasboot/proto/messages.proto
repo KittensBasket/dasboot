@@ -9,17 +9,17 @@ enum ReturnCode {
 
 // TO DO: later change TArg for every command
 message TArg {
-  string name = 1;
-  string value = 2;
+  optional string name = 1;
+  optional string value = 2;
 }
 
 message TRequest {
-  string type = 1;
+  optional string type = 1;
   repeated TArg args = 2;
 }
 
 message TResponse {
-  ReturnCode returnCode = 1;
-  string reuturnMessage = 2;
-  string returnData = 3;
+  optional ReturnCode returnCode = 1;
+  optional string reuturnMessage = 2;
+  optional string returnData = 3;
 }

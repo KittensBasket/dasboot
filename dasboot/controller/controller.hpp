@@ -22,7 +22,6 @@ namespace NController {
         bool IsReferencingById;
 
         TReferencingRule(const string& reference = NULL, const bool isReferencingById = true);
-        ~TReferencingRule();
     };
 
     struct TBuildSettings {
@@ -35,21 +34,18 @@ namespace NController {
         TReferencingRule Container;
 
         TStartSettings(const TReferencingRule& container);
-        ~TStartSettings();
     };
 
     struct TStopSettings {
         TReferencingRule Container;
 
         TStopSettings(const TReferencingRule&  container);
-        ~TStopSettings();
     };
 
     struct TRemoveSettings {
         TReferencingRule Container;
 
         TRemoveSettings(const TReferencingRule& container);
-        ~TRemoveSettings();
     };
 
     struct TExecuteSettings {
@@ -59,7 +55,6 @@ namespace NController {
         bool BackgroundFlag;
 
         TExecuteSettings(const TReferencingRule& container, const string& command, const string& args, const bool backgroundFlag);
-        ~TExecuteSettings();
     };
 
     struct TListSettings {
@@ -81,7 +76,6 @@ namespace NController {
 
         public:
             TController();
-            ~TController();
 
             bool WriteToDaemon();
             bool ReadFromDaemon();
