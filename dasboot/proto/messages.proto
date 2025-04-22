@@ -1,0 +1,25 @@
+syntax = "proto3";
+
+package NMessages;
+
+enum ReturnCode {
+  SUCESS = 0;
+  ERROR = 1;
+}
+
+// TO DO: later change TArg for every command
+message TArg {
+  optional string name = 1;
+  optional string value = 2;
+}
+
+message TRequest {
+  optional string type = 1;
+  repeated TArg args = 2;
+}
+
+message TResponse {
+  optional ReturnCode returnCode = 1;
+  optional string reuturnMessage = 2;
+  optional string returnData = 3;
+}
