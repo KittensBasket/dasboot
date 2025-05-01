@@ -1,12 +1,33 @@
-# source:
+# Set paths for proto files
 
-find_package(protobuf REQUIRED)
-set(PROTO_SOURCES messages.proto)
-add_library(proto ${PROTO_SOURCES})
-target_include_directories(proto INTERFACE ${CMAKE_CURRENT_BINARY_DIR})
-target_link_libraries(
-    proto
-    PUBLIC
-    protobuf::libprotobuf
-)
-protobuf_generate(TARGET proto LANGUAGE cpp)
+
+
+set(PROTO_FILES_DIR ${CMAKE_CURRENT_SOURCE_DIR})
+set(GENERATED_PROTO_SRC_DIR ${CMAKE_CURRENT_BINARY_DIR}/generated)
+file(MAKE_DIRECTORY ${GENERATED_PROTO_SRC_DIR})
+
+set(PROTO_FILES messages.proto)
+
+# Initialize lists for generated files
+set(GENERATED_PROTO_SRCS)
+set(GENERATED_PROTO_HDRS)
+
+foreach(proto_file ${PROTO_FILES})
+    get_filename_component(proto_name ${proto_file} NAME_WE)
+    list(APPEND GENERATED_PROTO_SRCS ${GENERATED_PROTO_SRC_DIR}/${proto_name}.pb.cc)
+    list(APPEND GENERATED_PROTO_HDRS ${GENERATED_PROTO_SRC_DIR}/${proto_name}.pb.h)
+
+    add_custom_command(
+        OUTPUT ${GENERATED_PROTO_SRC_DIR}/${proto_name}.pb.cc
+               ${GENERATED_PROTO_SRC_DIR}/${proto_name}.pb.h
+        COMMAND ${protobuf_BINARY_DIR}/protoc-3.21.4.0
+        ARGS --proto_path=${PROTO_FILES_DIR}
+             --cpp_out=${GENERATED_PROTO_SRC_DIR}
+             ${proto_file}
+        DEPENDS ${proto_file} ${protobuf_BINARY_DIR}/protoc-3.21.4.0
+    )
+endforeach()
+
+add_library(ProtobufMessages STATIC ${GENERATED_PROTO_SRCS} ${GENERATED_PROTO_HDRS})
+target_link_libraries(ProtobufMessages PRIVATE protobuf::libprotobuf)
+target_include_directories(ProtobufMessages PUBLIC ${GENERATED_PROTO_SRC_DIR})

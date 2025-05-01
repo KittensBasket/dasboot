@@ -4,5 +4,4 @@ add_subdirectory(proto)
 add_subdirectory(controller)
 
 add_executable(dasboot app/main.cpp)
-
-target_link_libraries(dasboot PUBLIC cli proto)
+target_link_libraries(dasboot PUBLIC cli)

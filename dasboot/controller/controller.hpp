@@ -4,7 +4,7 @@
 #include <optional>
 #include <stdlib.h>
 
-#include <../proto/messages.pb.h>
+#include <messages.pb.h>
 
 #define TZeroMQSocket int // TODO: VoidZeroNull0, temporary solution
 
