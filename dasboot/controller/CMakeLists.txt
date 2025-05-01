@@ -8,14 +8,12 @@ add_dependencies(controller ProtobufMessages)
 
 # tests:
 
-find_package(GTest REQUIRED)
-
 add_executable(controller_ut controller_ut.cpp)
 
 target_link_libraries(
     controller_ut
     PRIVATE
-    GTest::GTest
+    GTest::gtest
     controller
     ProtobufMessages
 )

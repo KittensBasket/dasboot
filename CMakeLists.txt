@@ -1,4 +1,5 @@
 cmake_minimum_required (VERSION 3.22.1)
+set(CMAKE_POLICY_VERSION_MINIMUM 3.5)
 
 project(dasboot)
 
@@ -46,15 +47,26 @@ FetchContent_Declare(
 FetchContent_MakeAvailable(cli11)
 # </Cli11>
 
+# <GTEst>
+FetchContent_Declare(
+    googletest
+    GIT_REPOSITORY https://github.com/google/googletest.git
+    GIT_TAG        release-1.12.1
+)
+
+set(INSTALL_GTEST OFF CACHE BOOL "" FORCE)
+FetchContent_MakeAvailable(googletest)
+# </GTEst>
+
 # <Protobuf>
-SET(protobuf_BUILD_TESTS OFF)
+set(protobuf_BUILD_TESTS OFF CACHE BOOL "" FORCE)
+set(protobuf_INSTALL OFF CACHE BOOL "" FORCE)
 
 FetchContent_Declare(
     protobuf
     GIT_REPOSITORY https://github.com/protocolbuffers/protobuf.git
     GIT_TAG        v21.4
     SOURCE_SUBDIR  cmake
-    FIND_PACKAGE_ARGS NAMES protobuf
 )
 
 FetchContent_MakeAvailable(protobuf)
