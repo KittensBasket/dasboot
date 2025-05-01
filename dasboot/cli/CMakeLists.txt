@@ -3,12 +3,13 @@
 set(SOURCES cli.cpp)
 set(HEADERS cli.hpp)
 add_library(cli ${SOURCES} ${HEADERS})
-target_include_directories(cli PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
-
+apply_compile_flags(cli)
+target_link_libraries(cli PUBLIC CLI11::CLI11)
 
 # tests:
 
 add_executable(cli_ut cli_ut.cpp)
+apply_compile_flags(cli_ut)
 
 target_link_libraries(
     cli_ut
