@@ -1,7 +1,5 @@
 # Set paths for proto files
 
-
-
 set(PROTO_FILES_DIR ${CMAKE_CURRENT_SOURCE_DIR})
 set(GENERATED_PROTO_SRC_DIR ${CMAKE_CURRENT_BINARY_DIR}/generated)
 file(MAKE_DIRECTORY ${GENERATED_PROTO_SRC_DIR})
@@ -29,5 +27,7 @@ foreach(proto_file ${PROTO_FILES})
 endforeach()
 
 add_library(ProtobufMessages STATIC ${GENERATED_PROTO_SRCS} ${GENERATED_PROTO_HDRS})
+set_target_properties(ProtobufMessages PROPERTIES CXX_CLANG_TIDY "")
 target_link_libraries(ProtobufMessages PRIVATE protobuf::libprotobuf)
-target_include_directories(ProtobufMessages PUBLIC ${GENERATED_PROTO_SRC_DIR})
+# SYSTEM here is required cause we do not want -Werror to be applied to protobuf headers
+target_include_directories(ProtobufMessages SYSTEM PUBLIC ${GENERATED_PROTO_SRC_DIR})

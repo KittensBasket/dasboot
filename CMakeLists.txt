@@ -80,59 +80,53 @@ include_directories(${protobuf_SOURCE_DIR}/src)
 
 # Start flags
 
-if (CMAKE_CXX_COMPILER)
-    add_compile_options(
-        # -Werror
-        # -Wall
-        # -Wextra
-        # -Wpedantic
+function(apply_compile_flags target)
+    if (CMAKE_CXX_COMPILER)
+        target_compile_options(${target} PRIVATE
+            -Werror
+            -Wall
+            -Wextra
+            -Wpedantic
 
-        # -Wcast-align
-        # -Wcast-qual
-        # -Wconversion
-        # -Wctor-dtor-privacy
-        # -Wenum-compare
-        # -Wfloat-equal
-        # -Wnon-virtual-dtor
-        # -Wold-style-cast
-        # -Woverloaded-virtual
-        # -Wredundant-decls
-        # -Wsign-conversion
-        # -Wsign-promo
-        # -Wzero-as-null-pointer-constant  !!!TODO!!! to come up with a solution: how to compile project with flags, but do not compile dependeces with it.
-
-        -O3
-        -ffast-math
-    )
-endif()
+            -Wcast-align
+            -Wcast-qual
+            -Wconversion
+            -Wctor-dtor-privacy
+            -Wenum-compare
+            -Wfloat-equal
+            -Wnon-virtual-dtor
+            -Wold-style-cast
+            -Woverloaded-virtual
+            -Wredundant-decls
+            -Wsign-conversion
+            -Wsign-promo
+            -Wzero-as-null-pointer-constant
+            
+            -O3
+            -ffast-math
+        )
+    endif()
+endfunction()
 
 # End flags
 
-
-# Start  clang-tidy
+# Start clang-tidy
 
 find_program(CLANG_TIDY_COMMAND NAMES clang-tidy)
 
-# !!!TODO!!! Make clang tidy great again
+ if(NOT CLANG_TIDY_COMMAND)
+     message(FATAL_ERROR "Clang-tidy is not found!")
+ else()
+     message(STATUS "Clang-tidy is ON")
 
-# if(NOT CLANG_TIDY_COMMAND)
-#     message(FATAL_ERROR "Clang-tidy is not found!")
-# else()
-#     message(STATUS "Clang-tidy is ON")
+     # Google C++ Style
+     set(CLANGTIDY_EXTRA_ARGS
+         "-checks=google-*"
+         "-warnings-as-errors=*"
+     )
 
-#     # Google C++ Style
-#     set(CLANGTIDY_EXTRA_ARGS
-#         "-checks=google-*"
-#         "-warnings-as-errors=*"
-#     )
-
-#     set(CMAKE_CXX_CLANG_TIDY "${CLANG_TIDY_COMMAND};-p=${CMAKE_BINARY_DIR};${CLANGTIDY_EXTRA_ARGS}" CACHE STRING "" FORCE)
-
-#     set(IGNORE_CLANG_TIDY_FILES
-#         "*.pb.h"
-#         "*.pb.cc"
-#     )
-# endif()
+     set(CMAKE_CXX_CLANG_TIDY "${CLANG_TIDY_COMMAND};-p=${CMAKE_BINARY_DIR};${CLANGTIDY_EXTRA_ARGS}" CACHE STRING "" FORCE)
+ endif()
 
 # End clang-tidy
 
@@ -149,4 +143,3 @@ if(NOT MYLIB_TESTING)
 else()
     enable_testing()
 endif()
-
