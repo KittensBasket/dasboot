@@ -14,7 +14,7 @@ TEST(CliUt, ConstructHelp) {
     {
         std::string name = "super-command";
         parser.AddGlobalCommand(name, "Super command.");
-        std::optional<std::string> opt;
+        std::string opt;
         parser.AddLocalOption(name, "-o", "--option", opt, "Very good option.");
         bool commandFlag = false;
         parser.AddLocalFlag(name, "-f", "--flag", commandFlag, "Flag from super-command command.");

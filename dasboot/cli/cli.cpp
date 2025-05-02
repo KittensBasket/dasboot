@@ -25,6 +25,17 @@ namespace NCli {
     }
 
 
+
+    // void TParser::AddGlobalOption(const string& shortName, const string& longName, string value, const string& description) {
+    //     App.add_option(BuildFullName(shortName, longName), value, description);
+    // }
+
+    // void TParser::AddGlobalOption(const string& shortName, const string& longName, string value, const string& description, CLI::Validator&& validator) {
+    //     App.add_option(BuildFullName(shortName, longName), value, description)->transform(std::move(validator));
+    // }
+
+
+
     void TParser::AddGlobalCommand(const string& commandName, const string& description){
         Commands[commandName] = App.add_subcommand(commandName, description);
     }
@@ -41,8 +52,18 @@ namespace NCli {
         Commands[commandName]->add_option(BuildFullName(shortName, longName), value, description)->transform(validator);
     }
 
+    // void TParser::AddLocalOption(const string& commandName, const string& shortName, const string& longName, string value, const string& description) {
+    //     Commands[commandName]->add_option(BuildFullName(shortName, longName), value, description);
+    // }
+
+    // void TParser::AddLocalOption(const string& commandName, const string& shortName, const string& longName, string value, const string& description, CLI::Validator&& validator) {
+    //     Commands[commandName]->add_option(BuildFullName(shortName, longName), value, description)->transform(validator);
+    // }
+
+
     int TParser::Parse(int argc, char* argv[]) const{
         CLI11_PARSE(App, argc, argv);
+        // std::cout << App.config_to_str(true, true) << std::endl;
         return 0;
     }
 

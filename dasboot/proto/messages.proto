@@ -23,3 +23,44 @@ message TResponse {
   optional string reuturnMessage = 2;
   optional string returnData = 3;
 }
+
+// For cli
+message TBuildOptions {
+  optional string name = 1;
+  optional string pathToDockerFile = 2;
+}
+
+message TRunOptions{
+  optional string name = 1;
+}
+
+message TStartOptions{
+  optional string name = 1;
+  optional string id = 2;
+}
+
+message TStopOptions {
+  optional string name = 1;
+  optional string id = 2;
+}
+
+message TPsOptions {
+  optional bool show_all = 1;
+}
+
+message TRmOptions {
+  optional string name = 1;
+  optional string id = 2;
+}
+
+message TExecOptions {
+  optional string name = 1;
+  optional string id = 2;
+  optional bool detach = 3;
+}
+
+message TAttachOptions {
+  optional string name = 1;
+  optional string id = 2;
+  optional bool no_stdin = 3;
+}
