@@ -18,4 +18,4 @@ target_link_libraries(
     cli
 )
 
-add_test(cli_gtests cli_ut)
+gtest_discover_tests(cli_ut)
