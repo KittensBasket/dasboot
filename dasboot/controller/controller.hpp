@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cstddef>
 #include <string>
 #include <optional>
 #include <stdlib.h>
@@ -14,52 +15,8 @@ namespace NController {
     using NMessages::TResponse;
 
     using std::string;
-    using std::optional;
 
-    /* All of these used for request construction: */
-    struct TReferencingRule {
-        string Reference;
-        bool IsReferencingById;
-
-        TReferencingRule(const string& reference = NULL, const bool isReferencingById = true);
-    };
-
-    struct TBuildSettings {
-        string PathToDasbootFile;
-
-        optional<string> ContainerName;
-    };
-
-    struct TStartSettings {
-        TReferencingRule Container;
-
-        TStartSettings(const TReferencingRule& container);
-    };
-
-    struct TStopSettings {
-        TReferencingRule Container;
-
-        TStopSettings(const TReferencingRule&  container);
-    };
-
-    struct TRemoveSettings {
-        TReferencingRule Container;
-
-        TRemoveSettings(const TReferencingRule& container);
-    };
-
-    struct TExecuteSettings {
-        TReferencingRule Container;
-        string Command;
-        string Args;
-        bool BackgroundFlag;
-
-        TExecuteSettings(const TReferencingRule& container, const string& command, const string& args, const bool backgroundFlag);
-    };
-
-    struct TListSettings {
-        bool ShowAllFlag;
-    };
+    /* TODO: USE PROTOBUF MESSAGES HERE */
 
     /* Used for default configurations retrievment: */
     class TGlobalConfig final {
@@ -71,11 +28,11 @@ namespace NController {
 
     class TController final {
         private:
-            TGlobalConfig globalConfig;
-            TZeroMQSocket daemonSocket;
+            const TGlobalConfig GlobalConfig;
+            TZeroMQSocket DaemonSocket;
 
         public:
-            TController();
+            TController(TGlobalConfig& globalConfig) : GlobalConfig(globalConfig) {};
 
             bool WriteToDaemon();
             bool ReadFromDaemon();
@@ -87,15 +44,15 @@ namespace NController {
             bool CommandHelp(const std::string command);
 
             // These work with Daemon:
-            TRequest Build(const TBuildSettings& buildSettings);
+            TRequest Build();
 
-            bool Start(const TStartSettings& startSettings);
+            bool Start();
 
-            bool Stop(const TStopSettings& stopSettings);
-            bool Remove(const TRemoveSettings& removeSettings);
+            bool Stop();
+            bool Remove();
 
-            bool Execute(const TExecuteSettings& executeSettings);
+            bool Execute();
 
-            bool List(const TListSettings& listSettings);
+            bool List();
     };
 };
