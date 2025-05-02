@@ -5,3 +5,4 @@ add_subdirectory(controller)
 
 add_executable(dasboot app/main.cpp)
 target_link_libraries(dasboot PUBLIC cli)
+target_link_libraries(dasboot PUBLIC controller)
