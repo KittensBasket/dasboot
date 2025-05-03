@@ -24,9 +24,8 @@ namespace NCli {
         App.add_option(BuildFullName(shortName, longName), value, description)->transform(std::move(validator));
     }
 
-    CLI::App* TParser::AddGlobalCommand(const string& commandName, const string& description){
+    void TParser::AddGlobalCommand(const string& commandName, const string& description){
         Commands[commandName] = App.add_subcommand(commandName, description);
-        return Commands[commandName];
     }
 
     void TParser::AddLocalFlag(const string& commandName, const string& shortName, const string& longName, bool& flag, const string& description) {
@@ -41,8 +40,16 @@ namespace NCli {
         Commands[commandName]->add_option(BuildFullName(shortName, longName), value, description)->transform(validator);
     }
 
-
-    int TParser::Parse(int argc, char* argv[]) const{
+    string TParser::FindCalledCommand() {
+        for (const auto& [command, interface] : Commands) {
+            if (interface->parsed() && (!interface->get_help_ptr()->as<bool>())) {
+                return command;
+            }
+        }
+        return this->GetHelp();
+    }
+    
+    int TParser::Parse(int argc, char* argv[]) {
         CLI11_PARSE(App, argc, argv);
         return 0;
     }
@@ -53,133 +60,186 @@ namespace NCli {
     }
 
 
+    void TParser::RegisterCommands(TMainSettings& mainSettings) {
+        // // dasboot --version
+        this->AddGlobalFlag("-v", "--version", mainSettings.Version.PrintVersion, "Print version information and quit");
+    
+        // Command 'info'
+        AddGlobalCommand("info", "Display system-wide information");
+    
+        // Command 'build'
+        AddGlobalCommand("build", "Creates a container");
+        this->AddLocalOption("build", "-n", "--name", mainSettings.BuildOptions.Name, "Container name");
+        this->AddLocalOption("build", "-f", "--file", mainSettings.BuildOptions.PathToDasbootFile, "Creates a container from a DasbootFile");
+    
+        // Command 'run'
+        AddGlobalCommand("run", "Run container in interactive mode");
+        this->AddLocalOption("run", "-n", "--name", mainSettings.RunOptions.Name, "Container name");
+    
+        // Command 'start'
+        AddGlobalCommand("start", "Launches a container by name or ID depending on specified options");
+        this->AddLocalOption("start", "-n", "--name",  mainSettings.StartOptions.Name, "Container name");
+        this->AddLocalOption("start", "-i", "--id",  mainSettings.StartOptions.Id, "Container ID");
+    
+        // Command 'stop'
+        AddGlobalCommand("stop", "Terminates a running container");
+        this->AddLocalOption("stop", "-n", "--name", mainSettings.StopOptions.Name, "Container name");
+        this->AddLocalOption("stop", "-i", "--id", mainSettings.StopOptions.Id, "Container ID");
+    
+        // Command 'ps'
+        AddGlobalCommand("ps", "Displays all available containers.");
+        this->AddLocalFlag("ps", "-a", "--all", mainSettings.PsOptions.ShowAll, "Lists all containers, including stopped ones.");
+    
+        // Command 'rm'
+        AddGlobalCommand("rm", "Deletes a container by name or ID depending on specified options");
+        this->AddLocalOption("rm", "-n", "--name", mainSettings.RmOptions.Name, "Container name");
+        this->AddLocalOption("rm", "-i", "--id", mainSettings.RmOptions.Id, "Container ID");
+    
+        // Command 'exec'
+        AddGlobalCommand("exec", "Runs one or multiple commands inside an already running container");
+        this->AddLocalOption("exec", "-n", "--name", mainSettings.ExecOptions.Name, "Container name");
+        this->AddLocalOption("exec", "-i", "--id", mainSettings.ExecOptions.Id, "Container ID");
+        this->AddLocalFlag("exec", "-d", "--detach", mainSettings.ExecOptions.Detach, "Detached mode: run command in the background");
+    
+        // Command 'attach'
+        AddGlobalCommand("attach", "Connects a terminal to a running container by its ID or name for interactive management and output monitoring");
+        this->AddLocalOption("attach", "-n", "--name", mainSettings.AttachOptions.Name, "Container name");
+        this->AddLocalOption("attach", "-i", "--id", mainSettings.AttachOptions.Id, "Container ID");
+        this->AddLocalFlag("attach", "", "--no-stdin", mainSettings.AttachOptions.NoStdin, "Do not attach STDIN");
+    
+    }
+
+
     // Converter for converting parsed command-line strings to protobuf messages, which are then sent to controller handlers.
     
-    void TConverter::ConvertToProtobuf(const TMainSettings& mainSettings) {
-        NMessages::TBuildOptions ProtoBuildOptions;
-        NMessages::TRunOptions ProtoRunOptions;
-        NMessages::TStartOptions ProtoStartOptions;
-        NMessages::TStopOptions ProtoStopOptions;
-        NMessages::TPsOptions ProtoPsOptions;
-        NMessages::TRmOptions ProtoRmOptions;
-        NMessages::TExecOptions ProtoExecOptions;
-        NMessages::TAttachOptions ProtoAttachOptions;
+    void TConverter::SendMainSettings(const TMainSettings& mainSettings, const std::string& command) {
 
-        if (mainSettings.Version.printVersion) {
+        if (mainSettings.Version.PrintVersion) {
             //print version -- function in controller
         }
-        if (CommandCallback(mainSettings.Info.isCalled)) {
+        if (command == "info") {
             //controller handle call
         }
-        if (ConvertRunOptions(mainSettings.RunOptions, ProtoRunOptions) || CommandCallback(mainSettings.RunOptions.isCalled)) {
+        if (command == "build") {
+            NMessages::TBuildOptions ProtoBuildOptions;
+            ProtoBuildOptions = TConverter::ConvertBuildOptions(mainSettings.BuildOptions, ProtoBuildOptions);
             //controller handle call
         } 
-        if (ConvertBuildOptions(mainSettings.BuildOptions, ProtoBuildOptions) || CommandCallback(mainSettings.BuildOptions.isCalled)) {
+        if (command == "run") {
+            NMessages::TRunOptions ProtoRunOptions;
+            ProtoRunOptions = TConverter::ConvertRunOptions(mainSettings.RunOptions, ProtoRunOptions);
             //controller handle call
         } 
-        if (ConvertStartOptions(mainSettings.StartOptions, ProtoStartOptions) || CommandCallback(mainSettings.StartOptions.isCalled)) {
+        if (command == "start") {
+            NMessages::TStartOptions ProtoStartOptions;
+            ProtoStartOptions = TConverter::ConvertStartOptions(mainSettings.StartOptions, ProtoStartOptions);
             //controller handle call
         }
-        if (ConvertStopOptions(mainSettings.StopOptions, ProtoStopOptions) || CommandCallback(mainSettings.StopOptions.isCalled)) {
+        if (command == "stop") {
+            NMessages::TStopOptions ProtoStopOptions;
+            ProtoStopOptions = TConverter::ConvertStopOptions(mainSettings.StopOptions, ProtoStopOptions);
             //controller handle call
         }
-        if (ConvertPsOptions(mainSettings.PsOptions, ProtoPsOptions) || CommandCallback(mainSettings.PsOptions.isCalled)) {
+        if (command == "ps") {
+            NMessages::TPsOptions ProtoPsOptions;
+            ProtoPsOptions = TConverter::ConvertPsOptions(mainSettings.PsOptions, ProtoPsOptions);
             //controller handle call
         }
-        if (ConvertRmOptions(mainSettings.RmOptions, ProtoRmOptions) || CommandCallback(mainSettings.RmOptions.isCalled)) {
+        if (command == "rm") {
+            NMessages::TRmOptions ProtoRmOptions;
+            ProtoRmOptions = TConverter::ConvertRmOptions(mainSettings.RmOptions, ProtoRmOptions);
             //controller handle call
         }
-        if (ConvertExecOptions(mainSettings.ExecOptions, ProtoExecOptions) || CommandCallback(mainSettings.ExecOptions.isCalled)) {
+        if (command == "exec") {
+            NMessages::TExecOptions ProtoExecOptions;
+            ProtoExecOptions = TConverter::ConvertExecOptions(mainSettings.ExecOptions, ProtoExecOptions);
             //controller handle call
         }
-        if (ConvertAttachOptions(mainSettings.AttachOptions, ProtoAttachOptions) || CommandCallback(mainSettings.AttachOptions.isCalled)) {
+        if (command == "attach") {
+            NMessages::TAttachOptions ProtoAttachOptions;
+            ProtoAttachOptions = TConverter::ConvertAttachOptions(mainSettings.AttachOptions, ProtoAttachOptions);
             //controller handle call
         }
     }
 
-
-    bool TConverter::CommandCallback(const CLI::App* command) {
-        return (command->parsed() && !command->get_help_ptr()->as<bool>());
+    NMessages::TBuildOptions TConverter::ConvertBuildOptions(const NCli::TBuildOptions& options, NMessages::TBuildOptions& protoOptions) {
+        if (options.Name.has_value()) {
+            protoOptions.set_name(options.Name.value());
+        }
+        if (options.PathToDasbootFile.has_value()) {
+            protoOptions.set_pathtodasbootfile(options.PathToDasbootFile.value());
+        }
+        return protoOptions;
     }
 
-    bool TConverter::ConvertBuildOptions(const NCli::TBuildOptions& options, NMessages::TBuildOptions& protoOptions) {
-        if (options.name.has_value()) {
-            protoOptions.set_name(options.name.value());
+    NMessages::TRunOptions TConverter::ConvertRunOptions(const NCli::TRunOptions& options, NMessages::TRunOptions& protoOptions) {
+        if (options.Name.has_value()) {
+            protoOptions.set_name(options.Name.value());
         }
-        if (options.pathtodasbootfile.has_value()) {
-            protoOptions.set_pathtodasbootfile(options.pathtodasbootfile.value());
-        }
-        return (protoOptions.has_name() || protoOptions.has_pathtodasbootfile());
+        return protoOptions;
     }
 
-    bool TConverter::ConvertRunOptions(const NCli::TRunOptions& options, NMessages::TRunOptions& protoOptions) {
-        if (options.name.has_value()) {
-            protoOptions.set_name(options.name.value());
+    NMessages::TStartOptions TConverter::ConvertStartOptions(const NCli::TStartOptions& options, NMessages::TStartOptions& protoOptions) {
+        if (options.Name.has_value()) {
+            protoOptions.set_name(options.Name.value());
         }
-        return protoOptions.has_name();
-    }
-
-    bool TConverter::ConvertStartOptions(const NCli::TStartOptions& options, NMessages::TStartOptions& protoOptions) {
-        if (options.name.has_value()) {
-            protoOptions.set_name(options.name.value());
+        if (options.Id.has_value()) {
+            protoOptions.set_id(options.Id.value());
         }
-        if (options.id.has_value()) {
-            protoOptions.set_id(options.id.value());
-        }
-        return (protoOptions.has_name() || protoOptions.has_id());
+        return protoOptions;
     }
     
-    bool TConverter::ConvertStopOptions(const NCli::TStopOptions& options, NMessages::TStopOptions& protoOptions) {
-        if (options.name.has_value()) {
-            protoOptions.set_name(options.name.value());
+    NMessages::TStopOptions TConverter::ConvertStopOptions(const NCli::TStopOptions& options, NMessages::TStopOptions& protoOptions) {
+        if (options.Name.has_value()) {
+            protoOptions.set_name(options.Name.value());
         }
-        if (options.id.has_value()) {
-            protoOptions.set_id(options.id.value());
+        if (options.Id.has_value()) {
+            protoOptions.set_id(options.Id.value());
         }
-        return (protoOptions.has_name() || protoOptions.has_id());
+        return protoOptions;
     }
     
-    bool TConverter::ConvertPsOptions(const NCli::TPsOptions& options, NMessages::TPsOptions& protoOptions) {
-        if (options.showAll) {
-            protoOptions.set_show_all(options.showAll);
+    NMessages::TPsOptions TConverter::ConvertPsOptions(const NCli::TPsOptions& options, NMessages::TPsOptions& protoOptions) {
+        if (options.ShowAll) {
+            protoOptions.set_show_all(options.ShowAll);
         }
-        return protoOptions.has_show_all();
+        return protoOptions;
     }
     
-    bool TConverter::ConvertRmOptions(const NCli::TRmOptions& options, NMessages::TRmOptions& protoOptions) {
-        if (options.name.has_value()) {
-            protoOptions.set_name(options.name.value());
+    NMessages::TRmOptions TConverter::ConvertRmOptions(const NCli::TRmOptions& options, NMessages::TRmOptions& protoOptions) {
+        if (options.Name.has_value()) {
+            protoOptions.set_name(options.Name.value());
         }
-        if (options.id.has_value()) {
-            protoOptions.set_id(options.id.value());
+        if (options.Id.has_value()) {
+            protoOptions.set_id(options.Id.value());
         }
-        return (protoOptions.has_name() || protoOptions.has_id());
+        return protoOptions;
     }
     
-    bool TConverter::ConvertExecOptions(const NCli::TExecOptions& options, NMessages::TExecOptions& protoOptions) {
-        if (options.name.has_value()) {
-            protoOptions.set_name(options.name.value());
+    NMessages::TExecOptions TConverter::ConvertExecOptions(const NCli::TExecOptions& options, NMessages::TExecOptions& protoOptions) {
+        if (options.Name.has_value()) {
+            protoOptions.set_name(options.Name.value());
         }
-        if (options.id.has_value()) {
-            protoOptions.set_id(options.id.value());
+        if (options.Id.has_value()) {
+            protoOptions.set_id(options.Id.value());
         }
-        if (options.detach) {
-            protoOptions.set_detach(options.detach);
+        if (options.Detach) {
+            protoOptions.set_detach(options.Detach);
         }
-        return (protoOptions.has_name() || protoOptions.has_id() || protoOptions.has_detach());
+        return protoOptions;
     }
     
-    bool TConverter::ConvertAttachOptions(const NCli::TAttachOptions& options, NMessages::TAttachOptions& protoOptions) {
-        if (options.name.has_value()) {
-            protoOptions.set_name(options.name.value());
+    NMessages::TAttachOptions TConverter::ConvertAttachOptions(const NCli::TAttachOptions& options, NMessages::TAttachOptions& protoOptions) {
+        if (options.Name.has_value()) {
+            protoOptions.set_name(options.Name.value());
         }
-        if (options.id.has_value()) {
-            protoOptions.set_id(options.id.value());
+        if (options.Id.has_value()) {
+            protoOptions.set_id(options.Id.value());
         }
-        if (options.no_stdin) {
-            protoOptions.set_nostdin(options.no_stdin);
+        if (options.NoStdin) {
+            protoOptions.set_nostdin(options.NoStdin);
         }
-        return (protoOptions.has_name() || protoOptions.has_id() || protoOptions.has_nostdin());
+        return protoOptions;
     }
 
 
@@ -191,8 +251,9 @@ namespace NCli {
     } // anonymous namespace
 
 
-    std::unique_ptr<TParser> MakeDasbootParser([[maybe_unused]] TMainSettings& settings) {
+    std::unique_ptr<TParser> MakeDasbootParser(TMainSettings& settings) {
         std::unique_ptr<TParser> parser(new TParser{DasbootDescription});
+        parser->RegisterCommands(settings);
         return parser;
     }
 }; // namespace NCli
