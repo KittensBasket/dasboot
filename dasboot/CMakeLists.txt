@@ -1,3 +1,4 @@
+add_subdirectory(cru)
 add_subdirectory(cli)
 add_subdirectory(app)
 add_subdirectory(proto)
