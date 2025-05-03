@@ -1,5 +1,6 @@
 #include <iostream>
 #include <vector>
+#include <format>
 
 #include <dasboot/cli/cli.hpp>
 #include <dasboot/cli/commands.hpp>
@@ -13,9 +14,6 @@ int main(int argc, char* argv[]) {
 
     parser->Parse(argc, argv);
 
-    NController::TProtobufMessage protoMsg;
-    protoMsg = NController::ConvertToProtobuf(settings);
-
-    std::cout << *protoMsg.ProtoStartOptions.mutable_name() << std::endl;
+    NCli::TConverter::ConvertToProtobuf(settings);
     return 0;
 }

@@ -25,7 +25,7 @@ namespace NCli {
         void AddGlobalOption(const string& shortName, const string& longName, TValue& value, const string& description);
         void AddGlobalOption(const string& shortName, const string& longName, TValue& value, const string& description, CLI::Validator&& validator);
 
-        void AddGlobalCommand(const string& commandName, const string& description);
+        CLI::App* AddGlobalCommand(const string& commandName, const string& description);
         void AddLocalFlag(const string& commandName, const string& shortName, const string& longName, bool& flag, const string& description);
         void AddLocalOption(const string& commandName, const string& shortName, const string& longName, TValue& value, const string& description);
         void AddLocalOption(const string& commandName, const string& shortName, const string& longName, TValue& value, const string& description, CLI::Validator&& validator);
@@ -34,42 +34,56 @@ namespace NCli {
         string GetHelp() const;
     };
 
+    struct TVersion {
+        bool printVersion = false;
+    };
+    struct TInfo {
+        CLI::App* isCalled;
+    };
     struct TRunOptions {
+        CLI::App* isCalled;
         std::optional<string> name;
-        // std::optional<string> id;
     };
     struct TBuildOptions {
+        CLI::App* isCalled;
         std::optional<string> name;
-        // std::optional<string> id;
+        std::optional<string> pathtodasbootfile;
     };
     struct TStartOptions {
+        CLI::App* isCalled;
         std::optional<string> name;
         std::optional<string> id;
     };
     struct TStopOptions {
+        CLI::App* isCalled;
         std::optional<string> name;
         std::optional<string> id;
     };
     struct TPsOptions {
-        bool showAll; 
+        CLI::App* isCalled;
+        bool showAll = false; 
     };
     struct TRmOptions {
+        CLI::App* isCalled;
         std::optional<string> name;
         std::optional<string> id;
     };
     struct TExecOptions {
+        CLI::App* isCalled;
         std::optional<string> name;
         std::optional<string> id;
-        bool detach;
+        bool detach = false;
     };
     struct TAttachOptions {
+        CLI::App* isCalled;
         std::optional<string> name;
         std::optional<string> id;
-        bool no_stdin;
+        bool no_stdin = false;
     };
 
     struct TMainSettings {
-        // instead, there should be a structure from the controller.
+        TVersion Version;
+        TInfo Info;
         TRunOptions RunOptions;
         TBuildOptions BuildOptions;
         TStartOptions StartOptions;
@@ -78,6 +92,20 @@ namespace NCli {
         TRmOptions RmOptions;
         TExecOptions ExecOptions;
         TAttachOptions AttachOptions;
+    };
+
+    class TConverter {
+    public:
+        static bool CommandCallback(const CLI::App* command);
+        static void ConvertToProtobuf(const TMainSettings& mainSettings);
+        static bool ConvertRunOptions(const NCli::TRunOptions& options, NMessages::TRunOptions& protoOptions);
+        static bool ConvertBuildOptions(const NCli::TBuildOptions& options, NMessages::TBuildOptions& protoOptions);
+        static bool ConvertStartOptions(const NCli::TStartOptions& options, NMessages::TStartOptions& protoOptions);
+        static bool ConvertStopOptions(const NCli::TStopOptions& options, NMessages::TStopOptions& protoOptions);
+        static bool ConvertPsOptions(const NCli::TPsOptions& options, NMessages::TPsOptions& protoOptions);
+        static bool ConvertRmOptions(const NCli::TRmOptions& options, NMessages::TRmOptions& protoOptions);
+        static bool ConvertExecOptions(const NCli::TExecOptions& options, NMessages::TExecOptions& protoOptions);
+        static bool ConvertAttachOptions(const NCli::TAttachOptions& options, NMessages::TAttachOptions& protoOptions);
     };
 
     std::unique_ptr<TParser> MakeDasbootParser(TMainSettings& settings);

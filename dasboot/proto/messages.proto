@@ -27,7 +27,8 @@ message TResponse {
 // For cli
 message TBuildOptions {
   optional string name = 1;
-  optional string pathToDockerFile = 2;
+  optional string pathtodasbootfile = 2;
+
 }
 
 message TRunOptions{
@@ -62,5 +63,5 @@ message TExecOptions {
 message TAttachOptions {
   optional string name = 1;
   optional string id = 2;
-  optional bool no_stdin = 3;
+  optional bool nostdin = 3;
 }

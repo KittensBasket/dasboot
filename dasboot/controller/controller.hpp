@@ -18,20 +18,9 @@ namespace NController {
     using std::string;
 
     /* TODO: USE PROTOBUF MESSAGES HERE */
-    struct TProtobufMessage {
-        NMessages::TBuildOptions ProtoBuildOptions;
-        NMessages::TRunOptions ProtoRunOptions;
-        NMessages::TStartOptions ProtoStartOptions;
-        NMessages::TStopOptions ProtoStopOptions;
-        NMessages::TPsOptions ProtoPsOptions;
-        NMessages::TRmOptions ProtoRmOptions;
-        NMessages::TExecOptions ProtoExecOptions;
-        NMessages::TAttachOptions ProtoAttachOptions;
-    };
-
-    TProtobufMessage ConvertToProtobuf(const NCli::TMainSettings& mainSettings);
-
     
+    // здесь будут функции отправляющие команды
+
     /* Used for default configurations retrievment: */
     class TGlobalConfig final {
         public:
