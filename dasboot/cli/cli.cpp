@@ -46,7 +46,7 @@ namespace NCli {
                 return command;
             }
         }
-        return this->GetHelp();
+        return "";
     }
     
     int TParser::Parse(int argc, char* argv[]) {
