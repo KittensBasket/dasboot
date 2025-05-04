@@ -5,6 +5,7 @@
 #include <optional>
 #include <stdlib.h>
 
+#include <dasboot/cli/cli.hpp>
 #include <messages.pb.h>
 
 #define TZeroMQSocket int // TODO: VoidZeroNull0, temporary solution
@@ -17,6 +18,8 @@ namespace NController {
     using std::string;
 
     /* TODO: USE PROTOBUF MESSAGES HERE */
+    
+    // здесь будут функции отправляющие команды
 
     /* Used for default configurations retrievment: */
     class TGlobalConfig final {

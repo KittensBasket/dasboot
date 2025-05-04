@@ -4,7 +4,7 @@ set(SOURCES cli.cpp)
 set(HEADERS cli.hpp)
 add_library(cli ${SOURCES} ${HEADERS})
 apply_compile_flags(cli)
-target_link_libraries(cli PUBLIC CLI11::CLI11)
+target_link_libraries(cli PUBLIC CLI11::CLI11 ProtobufMessages)
 
 # tests:
 
@@ -16,6 +16,7 @@ target_link_libraries(
     PRIVATE
     GTest::gtest
     cli
+    ProtobufMessages
 )
 
 add_test(cli_gtests cli_ut)
