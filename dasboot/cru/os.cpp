@@ -21,6 +21,51 @@ namespace NOs {
         return IsPathExists(path) && IsDirectory(path);
     }
 
+    TCommonStatus ChangeDirectory(const std::string& path) {
+        if (!IsDirectoryExists(path)) {
+            std::string error = MakeString() << "Directory " << path << " does not exists";
+            return { TCommonStatus::ECode::Failed, std::move(error) };
+        }
+
+        try {
+            fs::current_path(path);
+        } catch (const fs::filesystem_error& e) {
+            std::string error = MakeString() << "RemoveDirectory() failed: " << e.what();
+            return { TCommonStatus::ECode::Failed, std::move(error) };
+        }
+
+        return { TCommonStatus::ECode::Success };
+    }
+
+    TCommonStatus MakeDirectory(const std::string& path, mode_t mode) {
+        if (IsPathExists(path)) {
+            std::string error = MakeString() << "Path " << path << " already exists";
+            return { TCommonStatus::ECode::Failed, std::move(error) };
+        }
+
+        if (mkdir(path.c_str(), mode)) {
+            return { TCommonStatus::ECode::Failed, "MakeDirectory() failed" };
+        }
+
+        return { TCommonStatus::ECode::Success };
+    }
+
+    TCommonStatus RemoveDirectory(const std::string& path) {
+        if (!IsDirectoryExists(path)) {
+            std::string error = MakeString() << "Directory " << path << " does not exists";
+            return { TCommonStatus::ECode::Failed, std::move(error) };
+        }
+
+        try {
+            fs::remove(path);
+        } catch (const fs::filesystem_error& e) {
+            std::string error = MakeString() << "RemoveDirectory() failed: " << e.what();
+            return { TCommonStatus::ECode::Failed, std::move(error) };
+        }
+
+        return { TCommonStatus::ECode::Success };
+    }
+
     TCommonStatus WriteToFile(const std::string& path, const std::string& text) {
         if (!IsPathExists(path)) {
             std::string error = MakeString() << "Path " << path << " does not exists";
@@ -77,9 +122,7 @@ namespace NOs {
     }
 
     TCommonStatus Clone(const TCloneArgs& args) {
-        TCloneArgs args = {};
-
-        int result = syscall(SYS_clone3, &args, sizeof(args));
+        auto result = syscall(SYS_clone3, &args, sizeof(args));
 
         if (result == -1) {
             return { TCommonStatus::ECode::Failed, "Clone() failed" };
@@ -89,14 +132,14 @@ namespace NOs {
     }
 
     TCommonStatus PivotRoot(const std::string& rootfs, const std::string& oldRoot) {
-        if (syscall(SYS_pivot_root, ".", oldRoot.c_str())) {
+        if (syscall(SYS_pivot_root, rootfs.c_str(), oldRoot.c_str())) {
             return { TCommonStatus::ECode::Failed, "PivotRoot() failed" };
         }
 
         return { TCommonStatus::ECode::Success };
     }
 
-    TCommonStatus Mount(const std::string& source, const std::string& target, const std::string& type, unsigned long flags) {
+    TCommonStatus Mount(const std::string& source, const std::string& target, const std::string& type, uint64_t flags) {
         if (mount(source.c_str(), target.c_str(), type.c_str(), flags, nullptr)) {
             return { TCommonStatus::ECode::Failed, "Mount() failed" };
         }
@@ -112,35 +155,11 @@ namespace NOs {
         return { TCommonStatus::ECode::Success };
     }
 
-    TCommonStatus ChangeDirectory(const std::string& path) {
-        if (chdir(path.c_str())) {
-            return { TCommonStatus::ECode::Failed, "ChangeDirectory() failed" };
-        }
-
-        return { TCommonStatus::ECode::Success };
-    }
-
-    TCommonStatus MakeDirectory(const std::string& path, mode_t mode) {
-        if (mkdir(path.c_str(), mode)) {
-            return { TCommonStatus::ECode::Failed, "MakeDirectory() failed" };
-        }
-
-        return { TCommonStatus::ECode::Success };
-    }
-
-    TCommonStatus RemoveDirectory(const std::string& path) {
-        if (rmdir(path.c_str())) {
-            return { TCommonStatus::ECode::Failed, "RemoveDirectory() failed" };
-        }
-
-        return { TCommonStatus::ECode::Success };
-    }
-
-    int GetCurrentPid() {
+    pid_t GetCurrentPid() {
         return getpid();
     }
 
-    int GetCurrentUid() {
+    uid_t GetCurrentUid() {
         return getuid();
     }
 
@@ -156,14 +175,14 @@ namespace NOs {
         CloseWrite();
     }
     
-    void TPipe::CloseRead() {
+    void TPipe::CloseRead() noexcept {
         if (Fd[0] != -1) {
             ::close(Fd[0]);
             Fd[0] = -1;
         }
     }
 
-    void TPipe::CloseWrite() {
+    void TPipe::CloseWrite() noexcept {
         if (Fd[1] != -1) {
             ::close(Fd[1]);
             Fd[1] = -1;
@@ -175,9 +194,9 @@ namespace NOs {
     }
 
     ssize_t TPipe::Write(const void* data, size_t size) {
-        int resultSize = ::write(Fd[1], data, size);
+        ssize_t resultSize = ::write(Fd[1], data, size);
 
-        if (resultSize != size) {
+        if (resultSize < 0 || static_cast<size_t>(resultSize) != size) {
             throw std::runtime_error("write() failed");
         }
 
@@ -189,7 +208,7 @@ namespace NOs {
         ssize_t n = ::read(Fd[0], buf.data(), buf.size());
 
         if (n > 0) {
-            return std::string(buf.data(), n);
+            return std::string(buf.data(), static_cast<size_t>(n));
         }
 
         if (n < 0) {

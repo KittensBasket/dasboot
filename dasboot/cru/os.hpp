@@ -1,3 +1,5 @@
+#pragma once
+
 #include <sched.h>
 #include <unistd.h>
 #include <sys/wait.h>
@@ -35,7 +37,7 @@ namespace NOs {
     TCommonStatus Exec(const std::string& program, char* const argv[]);
     TCommonStatus Clone(const TCloneArgs& args);
 
-    TCommonStatus Mount(const std::string& source, const std::string& target, const std::string& type, unsigned long flags);
+    TCommonStatus Mount(const std::string& source, const std::string& target, const std::string& type, uint64_t flags);
     TCommonStatus Unmount(const std::string& putOld);
     TCommonStatus PivotRoot(const std::string& rootfs, const std::string& oldRoot);
 
@@ -43,8 +45,8 @@ namespace NOs {
     TCommonStatus MakeDirectory(const std::string& path, mode_t mode = 0755);
     TCommonStatus RemoveDirectory(const std::string& path);
 
-    int GetCurrentPid();
-    int GetCurrentUid();
+    pid_t GetCurrentPid();
+    uid_t GetCurrentUid();
 
     class TPipe {
     public:
