@@ -4,6 +4,8 @@
 #include <iostream>
 #include <optional>
 #include <unordered_map>
+
+#include <dasboot/controller/controller.hpp>
 #include <messages.pb.h>
 
 namespace NCli {
@@ -14,33 +16,41 @@ namespace NCli {
     struct TVersion {
         bool PrintVersion = false;
     };
+
     struct TRunOptions {
         std::optional<string> Name;
     };
+
     struct TBuildOptions {
         std::optional<string> Name;
         std::optional<string> PathToDasbootFile;
     };
+
     struct TStartOptions {
         std::optional<string> Name;
         std::optional<string> Id;
     };
+
     struct TStopOptions {
         std::optional<string> Name;
         std::optional<string> Id;
     };
+
     struct TPsOptions {
         bool ShowAll = false; 
     };
+
     struct TRmOptions {
         std::optional<string> Name;
         std::optional<string> Id;
     };
+
     struct TExecOptions {
         std::optional<string> Name;
         std::optional<string> Id;
         bool Detach = false;
     };
+    
     struct TAttachOptions {
         std::optional<string> Name;
         std::optional<string> Id;

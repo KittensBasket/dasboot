@@ -1,6 +1,5 @@
 #include <iostream>
 #include <vector>
-#include <format>
 
 #include <dasboot/cli/cli.hpp>
 #include <dasboot/controller/controller.hpp>
@@ -12,8 +11,8 @@ int main(int argc, char* argv[]) {
 
     std::string command = parser->FindCalledCommand();
     
-    if (command == "") {
-        parser->GetHelp();
+    if (command.empty()) {
+        std::cout << parser->GetHelp();
         return 0;
     }
     

@@ -124,6 +124,9 @@ namespace NCli {
             NMessages::TBuildOptions ProtoBuildOptions;
             ProtoBuildOptions = TConverter::ConvertBuildOptions(mainSettings.BuildOptions, ProtoBuildOptions);
             //controller handle call
+
+            NController::Build(ProtoBuildOptions);
+            
         } 
         if (command == "run") {
             NMessages::TRunOptions ProtoRunOptions;
