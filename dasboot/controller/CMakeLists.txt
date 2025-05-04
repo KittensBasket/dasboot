@@ -20,4 +20,4 @@ target_link_libraries(
     ProtobufMessages
 )
 
-add_test(tape_gtests controller_ut)
+gtest_discover_tests(controller_ut)

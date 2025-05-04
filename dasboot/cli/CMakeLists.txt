@@ -19,4 +19,4 @@ target_link_libraries(
     ProtobufMessages
 )
 
-add_test(cli_gtests cli_ut)
+gtest_discover_tests(cli_ut)

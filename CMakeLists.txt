@@ -19,6 +19,9 @@ set(CMAKE_C_COMPILER "clang" CACHE STRING "C compiler" FORCE)
 include(FetchContent)
 
 # <ZeroMQ>
+set(ZMQ_BUILD_TESTS OFF CACHE BOOL "" FORCE)
+set(CPPZMQ_BUILD_TESTS OFF CACHE BOOL "" FORCE)
+
 FetchContent_Declare(
     zeromq_c
     GIT_REPOSITORY https://github.com/zeromq/libzmq.git
@@ -57,6 +60,8 @@ FetchContent_Declare(
 )
 
 FetchContent_MakeAvailable(googletest)
+include(GoogleTest)
+
 # </GTest>
 
 # <Protobuf>
@@ -125,12 +130,14 @@ find_program(CLANG_TIDY_COMMAND NAMES clang-tidy)
          "-warnings-as-errors=*"
      )
 
-     set(CMAKE_CXX_CLANG_TIDY "${CLANG_TIDY_COMMAND};-p=${CMAKE_BINARY_DIR};${CLANGTIDY_EXTRA_ARGS}" CACHE STRING "" FORCE)
+     set(CMAKE_CXX_CLANG_TIDY "${CLANG_TIDY_COMMAND};-p=${CMAKE_BINARY_DIR};--header-filter=^${CMAKE_SOURCE_DIR}/dasboot/;${CLANGTIDY_EXTRA_ARGS}" CACHE STRING "" FORCE)
  endif()
 
 # End clang-tidy
 
 include_directories(.)
+
+enable_testing()
 
 add_subdirectory(dasboot)
 
