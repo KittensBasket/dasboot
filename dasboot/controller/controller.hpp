@@ -10,15 +10,7 @@
 #define TZeroMQSocket int // TODO: VoidZeroNull0, temporary solution
 
 namespace NController {
-    using NMessages::TArg;
-    using NMessages::TRequest;
-    using NMessages::TResponse;
-
     using std::string;
-
-    /* TODO: USE PROTOBUF MESSAGES HERE */
-    
-    // здесь будут функции отправляющие команды
 
     /* Used for default configurations retrievment: */
     class TGlobalConfig final {
@@ -46,7 +38,7 @@ namespace NController {
             bool CommandHelp(const std::string command);
 
             // These work with Daemon:
-            TRequest Build();
+            bool Build();
 
             bool Start();
 
