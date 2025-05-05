@@ -48,6 +48,8 @@ FetchContent_Declare(
 )
 
 FetchContent_MakeAvailable(cli11)
+
+include_directories(${cli11_SOURCE_DIR}/include)
 # </Cli11>
 
 # <GTest>

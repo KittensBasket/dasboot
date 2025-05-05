@@ -8,7 +8,7 @@ public:
         return *this;
     }
 
-    operator std::string() const {
+    operator std::string() const { // NOLINT(google-explicit-constructor,hicpp-explicit-conversions)
         return Stream.str();
     }
 protected:

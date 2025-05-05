@@ -5,7 +5,6 @@
 #include <optional>
 #include <stdlib.h>
 
-#include <dasboot/cli/cli.hpp>
 #include <messages.pb.h>
 
 #define TZeroMQSocket int // TODO: VoidZeroNull0, temporary solution
