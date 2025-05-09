@@ -1,7 +1,7 @@
 # source:
 
-set(SOURCES cru.cpp)
-set(HEADERS cru.hpp)
+set(HEADERS common.hpp os.hpp)
+set(SOURCES common.cpp os.cpp)
 add_library(cru ${SOURCES} ${HEADERS})
 apply_compile_flags(cru)
 

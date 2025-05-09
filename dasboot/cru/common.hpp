@@ -1,3 +1,5 @@
+#pragma once
+
 #include <sstream>
 
 class MakeString {
@@ -13,4 +15,15 @@ public:
     }
 protected:
     std::stringstream Stream;
+};
+
+class TCommonStatus {
+public:
+    enum ECode {
+        Success = 0,
+        Failed = 1
+    };
+
+    ECode Code = ECode::Success;
+    std::string Error = "";
 };
