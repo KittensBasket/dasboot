@@ -17,4 +17,14 @@ target_link_libraries(
     cru
 )
 
-add_test(cru_gtests cru_ut)
+add_executable(fs_ut fs_ut.cpp)
+apply_compile_flags(fs_ut)
+
+target_link_libraries(
+    fs_ut
+    PRIVATE
+    GTest::gtest
+    cru
+)
+
+add_test(cru_gtests fs_ut)

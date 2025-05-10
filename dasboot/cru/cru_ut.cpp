@@ -17,7 +17,31 @@ TEST(CruUt, CheckMakeString) {
     EXPECT_EQ(message, str);
 }
 
-// Write tests for NOs
+TEST(CruUt, CheckTPipeBase) {
+    NOs::TPipe pipe;
+    std::string message = "Hello, World!";
+    pipe.Write(message);
+    std::string readMessage = pipe.ReadAll();
+    EXPECT_EQ(message, readMessage);
+}
+
+TEST(CruUt, CheckTPipeWithFork) {
+    NOs::TPipe pipe;
+    std::string message = "Hello, World!";
+    pid_t pid = fork();
+    if (pid == 0) {
+        pipe.CloseWrite();
+        std::string readMessage = pipe.ReadAll();
+        EXPECT_EQ(message, readMessage);
+        exit(0);
+    } else if (pid > 0) {
+        pipe.CloseRead();
+        pipe.Write(message);
+        waitpid(pid, nullptr, 0);
+    } else {
+        FAIL() << "Fork failed";
+    }
+}
 
 int main(int argc, char** argv) {
     ::testing::InitGoogleTest(&argc, argv);
