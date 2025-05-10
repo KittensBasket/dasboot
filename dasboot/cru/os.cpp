@@ -1,6 +1,48 @@
 #include "os.hpp"
 
 namespace NOs {
+namespace {
+    NCommon::TStatus PreCreate(const std::string& path, bool isDeep, mode_t mode) {
+        if (IsPathExists(path)) {
+            std::string error = MakeString() << "Path \'" << path << "\' already exists";
+            return { NCommon::TStatus::ECode::Failed, std::move(error) };
+        }
+
+        if (!isDeep) {
+            for (const auto& dir : fs::path(path).parent_path()) {
+                if (!IsDirectoryExists(dir.string())) {
+                    std::string error = MakeString() << "Path \'" << dir.string() << "\' does not exists";
+                    return { NCommon::TStatus::ECode::Failed, std::move(error) };
+                }
+            }
+        } else {
+            std::string firstCreatedDirectory = "";
+            std::string currentDirectory = "";
+            for (const auto& dir : fs::path(path).parent_path()) {
+                if (!currentDirectory.empty()) {
+                    currentDirectory += "/";
+                }
+                currentDirectory += dir.string();
+
+                if (!IsDirectoryExists(currentDirectory)) {
+                    auto status = CreateDirectory(currentDirectory, true, mode);
+                    if (status.Code != NCommon::TStatus::ECode::Success) {
+                        fs::remove_all(firstCreatedDirectory);
+                        std::string error = MakeString() << "CreateDirectory() failed: " << status.Error;
+                        return { NCommon::TStatus::ECode::Failed, std::move(error) };
+                    }
+
+                    if (firstCreatedDirectory.empty()) {
+                        firstCreatedDirectory = currentDirectory;
+                    }
+                }
+            }
+        }
+
+        return { NCommon::TStatus::ECode::Success };
+    }
+} // anonymous namespace
+
     bool IsPathExists(const std::string& path) {
         return fs::exists(path);
     }
@@ -21,85 +63,134 @@ namespace NOs {
         return IsPathExists(path) && IsDirectory(path);
     }
 
-    TCommonStatus ChangeDirectory(const std::string& path) {
+    bool IsDirectoryEmpty(const std::string& path) {
+        return fs::is_empty(path);
+    }
+
+    NCommon::TStatus ChangeDirectory(const std::string& path) {
         if (!IsDirectoryExists(path)) {
             std::string error = MakeString() << "Directory " << path << " does not exists";
-            return { TCommonStatus::ECode::Failed, std::move(error) };
+            return { NCommon::TStatus::ECode::Failed, std::move(error) };
         }
 
         try {
             fs::current_path(path);
         } catch (const fs::filesystem_error& e) {
-            std::string error = MakeString() << "RemoveDirectory() failed: " << e.what();
-            return { TCommonStatus::ECode::Failed, std::move(error) };
+            std::string error = MakeString() << "ChangeDirectory() failed: " << e.what();
+            return { NCommon::TStatus::ECode::Failed, std::move(error) };
         }
 
-        return { TCommonStatus::ECode::Success };
+        return { NCommon::TStatus::ECode::Success };
     }
 
-    TCommonStatus MakeDirectory(const std::string& path, mode_t mode) {
-        if (IsPathExists(path)) {
-            std::string error = MakeString() << "Path " << path << " already exists";
-            return { TCommonStatus::ECode::Failed, std::move(error) };
+    NCommon::TStatus CreateDirectory(const std::string& path, bool isDeep, mode_t mode) {
+        auto status = PreCreate(path, isDeep, mode);
+
+        if (status.Code != NCommon::TStatus::ECode::Success) {
+            return status;
         }
 
         if (mkdir(path.c_str(), mode)) {
-            return { TCommonStatus::ECode::Failed, "MakeDirectory() failed" };
+            return { NCommon::TStatus::ECode::Failed, "MakeDirectory() failed" };
         }
 
-        return { TCommonStatus::ECode::Success };
+        return { NCommon::TStatus::ECode::Success };
     }
 
-    TCommonStatus RemoveDirectory(const std::string& path) {
-        if (!IsDirectoryExists(path)) {
-            std::string error = MakeString() << "Directory " << path << " does not exists";
-            return { TCommonStatus::ECode::Failed, std::move(error) };
+    NCommon::TStatus CreateFile(const std::string& path, bool isDeep, mode_t mode) {
+        auto status = PreCreate(path, isDeep, mode);
+
+        if (status.Code != NCommon::TStatus::ECode::Success) {
+            return status;
+        }
+
+        if (creat(path.c_str(), mode) == -1) {
+            std::string error = MakeString() << "CreateFile() failed";
+            return { NCommon::TStatus::ECode::Failed, std::move(error) };
+        }
+
+        return { NCommon::TStatus::ECode::Success };
+    }
+
+    NCommon::TStatus RemoveFile(const std::string& path) {
+        if (!IsFileExists(path)) {
+            std::string error = MakeString() << "File " << path << " does not exists";
+            return { NCommon::TStatus::ECode::Failed, std::move(error) };
         }
 
         try {
             fs::remove(path);
         } catch (const fs::filesystem_error& e) {
-            std::string error = MakeString() << "RemoveDirectory() failed: " << e.what();
-            return { TCommonStatus::ECode::Failed, std::move(error) };
+            std::string error = MakeString() << "RemoveFile() failed: " << e.what();
+            return { NCommon::TStatus::ECode::Failed, std::move(error) };
         }
 
-        return { TCommonStatus::ECode::Success };
+        return { NCommon::TStatus::ECode::Success };
     }
 
-    TCommonStatus WriteToFile(const std::string& path, const std::string& text) {
+    NCommon::TStatus RemoveDirectory(const std::string& path, bool shouldBeEmpty) {
+        if (!IsDirectoryExists(path)) {
+            std::string error = MakeString() << "Directory " << path << " does not exists";
+            return {NCommon::TStatus::ECode::Failed, std::move(error) };
+        }
+
+        if (shouldBeEmpty && !fs::is_empty(path)) {
+            std::string error = MakeString() << "Directory " << path << " is not empty";
+            return { NCommon::TStatus::ECode::Failed, std::move(error) };
+        }
+
+        try {
+            if (!fs::remove_all(path)) {
+                throw fs::filesystem_error("Failed to remove directory", std::make_error_code(std::errc::operation_canceled));
+            }
+        } catch (const fs::filesystem_error& e) {
+            std::string error = MakeString() << "RemoveDirectory() failed: " << e.what();
+            return { NCommon::TStatus::ECode::Failed, std::move(error) };
+        }
+
+        return { NCommon::TStatus::ECode::Success };
+    }
+
+    NCommon::TStatus WriteToFile(const std::string& path, const std::string& text) {
         if (!IsPathExists(path)) {
-            std::string error = MakeString() << "Path " << path << " does not exists";
-            return { TCommonStatus::ECode::Failed, std::move(error) };
+            std::string error = MakeString() << "Path '" << path << "' does not exists";
+            return { NCommon::TStatus::ECode::Failed, std::move(error) };
         }
 
         if (!IsFile(path)) {
-            std::string error = MakeString() << path << " is not file";
-            return { TCommonStatus::ECode::Failed, std::move(error) };
+            std::string error = MakeString() << '\'' << path << "' is not file";
+            return { NCommon::TStatus::ECode::Failed, std::move(error) };
         }
 
         std::ofstream fout(path, std::ofstream::out);
         fout << text;
         fout.flush();
-        return { TCommonStatus::ECode::Success };
+        return { NCommon::TStatus::ECode::Success };
     }
 
-    TCommonStatus CopyFile(const std::string& source, const std::string& target) {
-        if (!IsFileExists(source)) {
-            std::string error = MakeString() << "Source file " << source << " does not exists";
-            return { TCommonStatus::ECode::Failed, std::move(error) };
+    NCommon::TStatus Copy(const std::string& source, const std::string& target) {
+        if (!IsPathExists(source)) {
+            std::string error = MakeString() << "Source file \'" << source << "\' does not exists";
+            return { NCommon::TStatus::ECode::Failed, std::move(error) };
         }
 
-        if (IsFileExists(target)) {
-            std::string error = MakeString() << "Target file " << target << " already exists";
-            return { TCommonStatus::ECode::Failed, std::move(error) };
+        if (IsPathExists(target)) {
+            std::string error = MakeString() << "Target file \'" << target << "\' already exists";
+            return { NCommon::TStatus::ECode::Failed, std::move(error) };
         }
 
-        fs::copy_file(source, target, fs::copy_options::overwrite_existing);
-        return { TCommonStatus::ECode::Success };
+        try {
+            fs::copy(source, target);
+        } catch (const fs::filesystem_error& e) {
+            std::string error = MakeString() << "Copy() failed: " << e.what();
+            return { NCommon::TStatus::ECode::Failed, std::move(error) };
+        }
+
+        return { NCommon::TStatus::ECode::Success };
     }
 
-    TCommonStatus SetClearEnv() {
-        TCommonStatus errorStatus = { TCommonStatus::ECode::Failed, "Couldnt clear environment" };
+    NCommon::TStatus SetClearEnv() {
+        NCommon::TStatus errorStatus = { NCommon::TStatus::ECode::Failed, "Couldnt clear environment" };
 
         if (clearenv()) {
             return errorStatus;
@@ -108,51 +199,51 @@ namespace NOs {
         setenv("PATH", "/usr/bin:/bin", 1);
         setenv("HOME", "/root", 1);
 
-        return { TCommonStatus::ECode::Success };
+        return { NCommon::TStatus::ECode::Success };
     }
 
-    TCommonStatus Exec(const std::string& program, char* const argv[]) {
+    NCommon::TStatus Exec(const std::string& program, char* const argv[]) {
         int result = execvp(program.c_str(), argv);
 
         if (result == -1) {
-            return { TCommonStatus::ECode::Failed, "Exec() failed" };
+            return { NCommon::TStatus::ECode::Failed, "Exec() failed" };
         }
 
-        return { TCommonStatus::ECode::Success };
+        return { NCommon::TStatus::ECode::Success };
     }
 
-    TCommonStatus Clone(const TCloneArgs& args) {
+    NCommon::TStatus Clone(const TCloneArgs& args) {
         auto result = syscall(SYS_clone3, &args, sizeof(args));
 
         if (result == -1) {
-            return { TCommonStatus::ECode::Failed, "Clone() failed" };
+            return { NCommon::TStatus::ECode::Failed, "Clone() failed" };
         }
 
-        return { TCommonStatus::ECode::Success };
+        return { NCommon::TStatus::ECode::Success };
     }
 
-    TCommonStatus PivotRoot(const std::string& rootfs, const std::string& oldRoot) {
+    NCommon::TStatus PivotRoot(const std::string& rootfs, const std::string& oldRoot) {
         if (syscall(SYS_pivot_root, rootfs.c_str(), oldRoot.c_str())) {
-            return { TCommonStatus::ECode::Failed, "PivotRoot() failed" };
+            return { NCommon::TStatus::ECode::Failed, "PivotRoot() failed" };
         }
 
-        return { TCommonStatus::ECode::Success };
+        return { NCommon::TStatus::ECode::Success };
     }
 
-    TCommonStatus Mount(const std::string& source, const std::string& target, const std::string& type, uint64_t flags) {
+    NCommon::TStatus Mount(const std::string& source, const std::string& target, const std::string& type, uint64_t flags) {
         if (mount(source.c_str(), target.c_str(), type.c_str(), flags, nullptr)) {
-            return { TCommonStatus::ECode::Failed, "Mount() failed" };
+            return { NCommon::TStatus::ECode::Failed, "Mount() failed" };
         }
 
-        return { TCommonStatus::ECode::Success };
+        return { NCommon::TStatus::ECode::Success };
     }
 
-    TCommonStatus Unmount(const std::string& putOld) {
+    NCommon::TStatus Unmount(const std::string& putOld) {
         if (umount2(putOld.c_str(), MNT_DETACH)) {
-            return { TCommonStatus::ECode::Failed, "Unmount() failed" };
+            return { NCommon::TStatus::ECode::Failed, "Unmount() failed" };
         }
 
-        return { TCommonStatus::ECode::Success };
+        return { NCommon::TStatus::ECode::Success };
     }
 
     pid_t GetCurrentPid() {
@@ -174,17 +265,17 @@ namespace NOs {
         CloseRead();
         CloseWrite();
     }
-    
+
     void TPipe::CloseRead() noexcept {
         if (Fd[0] != -1) {
-            ::close(Fd[0]);
+            close(Fd[0]);
             Fd[0] = -1;
         }
     }
 
     void TPipe::CloseWrite() noexcept {
         if (Fd[1] != -1) {
-            ::close(Fd[1]);
+            close(Fd[1]);
             Fd[1] = -1;
         }
     }
@@ -194,7 +285,7 @@ namespace NOs {
     }
 
     ssize_t TPipe::Write(const void* data, size_t size) {
-        ssize_t resultSize = ::write(Fd[1], data, size);
+        ssize_t resultSize = write(Fd[1], data, size);
 
         if (resultSize < 0 || static_cast<size_t>(resultSize) != size) {
             throw std::runtime_error("write() failed");
@@ -205,7 +296,7 @@ namespace NOs {
 
     std::string TPipe::ReadAll(size_t limit) {
         std::vector<char> buf(limit);
-        ssize_t n = ::read(Fd[0], buf.data(), buf.size());
+        ssize_t n = read(Fd[0], buf.data(), buf.size());
 
         if (n > 0) {
             return std::string(buf.data(), static_cast<size_t>(n));

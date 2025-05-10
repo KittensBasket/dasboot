@@ -16,6 +16,7 @@
 #include <sys/stat.h>
 #include <filesystem>
 #include <vector>
+#include <fcntl.h>
 
 #include "common.hpp"
 
@@ -29,21 +30,25 @@ namespace NOs {
     bool IsFileExists(const std::string& path);
     bool IsDirectory(const std::string& path);
     bool IsDirectoryExists(const std::string& path);
+    bool IsDirectoryEmpty(const std::string& path);
 
-    TCommonStatus WriteToFile(const std::string& path, const std::string& text);
-    TCommonStatus CopyFile(const std::string& source, const std::string& target);
+    NCommon::TStatus WriteToFile(const std::string& path, const std::string& text);
+    NCommon::TStatus Copy(const std::string& source, const std::string& target);
 
-    TCommonStatus SetClearEnv();
-    TCommonStatus Exec(const std::string& program, char* const argv[]);
-    TCommonStatus Clone(const TCloneArgs& args);
+    NCommon::TStatus SetClearEnv();
+    NCommon::TStatus Exec(const std::string& program, char* const argv[]);
+    NCommon::TStatus Clone(const TCloneArgs& args);
 
-    TCommonStatus Mount(const std::string& source, const std::string& target, const std::string& type, uint64_t flags);
-    TCommonStatus Unmount(const std::string& putOld);
-    TCommonStatus PivotRoot(const std::string& rootfs, const std::string& oldRoot);
+    NCommon::TStatus Mount(const std::string& source, const std::string& target, const std::string& type, uint64_t flags);
+    NCommon::TStatus Unmount(const std::string& putOld);
+    NCommon::TStatus PivotRoot(const std::string& rootfs, const std::string& oldRoot);
 
-    TCommonStatus ChangeDirectory(const std::string& path);
-    TCommonStatus MakeDirectory(const std::string& path, mode_t mode = 0755);
-    TCommonStatus RemoveDirectory(const std::string& path);
+    NCommon::TStatus CreateFile(const std::string& path, bool isDeep = false, mode_t mode = 0755);
+    NCommon::TStatus RemoveFile(const std::string& path);
+
+    NCommon::TStatus ChangeDirectory(const std::string& path);
+    NCommon::TStatus CreateDirectory(const std::string& path, bool isDeep = false, mode_t mode = 0755);
+    NCommon::TStatus RemoveDirectory(const std::string& path, bool shouldBeEmpty = true);
 
     pid_t GetCurrentPid();
     uid_t GetCurrentUid();

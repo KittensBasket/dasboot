@@ -17,7 +17,8 @@ protected:
     std::stringstream Stream;
 };
 
-class TCommonStatus {
+namespace NCommon {
+class TStatus {
 public:
     enum ECode {
         Success = 0,
@@ -27,3 +28,5 @@ public:
     ECode Code = ECode::Success;
     std::string Error = "";
 };
+
+} // namespace NCommon
