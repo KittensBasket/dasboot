@@ -1,3 +1,5 @@
+# frontend
+
 add_subdirectory(cru)
 add_subdirectory(cli)
 add_subdirectory(app)
@@ -8,3 +10,8 @@ add_executable(dasboot app/main.cpp)
 apply_compile_flags(dasboot)
 target_link_libraries(dasboot PUBLIC cli)
 target_link_libraries(dasboot PUBLIC controller)
+
+
+# core
+
+add_subdirectory(core)
