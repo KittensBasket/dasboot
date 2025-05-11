@@ -181,7 +181,7 @@ namespace NCli {
         }
 
         else {
-            throw std::exception("Unknown command");
+            throw std::runtime_error("Unknown command");
         }
 
         
