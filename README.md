@@ -2,34 +2,35 @@
 
 A small containerization utility, written in C/C++. Made as team pet project.
 
-## Build (Ubuntu)
-
-To build this project first time, the following programs should be installed in your operating system:
-* [CMake](#install-CMake);
-
-After that, you build project.
-
-Before installing the programs, do not forget to do:
-
+## Dependencies
+Make sure to have these installed:
+* Clang - compiler
+* CMake - generates build files
+* Ninja - builds
 ```bash
-sudo apt update
+sudo apt update && \
+sudo apt install -y clang cmake ninja-build
+```
+All other dependencies will be fetched during CMake run.
+
+## Clone the repo
+Get the project:
+```bash
+git clone https://github.com/KittensBasket/dasboot.git && \
+cd dasboot
 ```
 
-### Install CMake
-
+## Build the project
+Run CMake and then build with Ninja:
 ```bash
-sudo apt install -y cmake
-```
-
-### Build and compile
-
-```bash
-git clone https://github.com/flown4qqqq/dasboot.git && \
-cd dasboot && \
 mkdir build && \
-cd build && \
-cmake .. && \
-make
+cd build \
+cmake .. -G Ninja && \
+ninja
 ```
-
-You are great!
+## Tests
+Run 
+```bash
+ctest
+```
+to check all modules or for individual module tests - there is an executable file inside its directory ending with _ut.
