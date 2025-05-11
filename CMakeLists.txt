@@ -111,7 +111,13 @@ function(apply_compile_flags target)
             
             -O3
             -ffast-math
+
+            # For coverage
+            -fprofile-instr-generate
+            -fcoverage-mapping
         )
+        # For coverage
+        add_link_options(-fprofile-instr-generate -fcoverage-mapping)
     endif()
 endfunction()
 
@@ -132,7 +138,7 @@ find_program(CLANG_TIDY_COMMAND NAMES clang-tidy)
          "-warnings-as-errors=*"
      )
 
-     set(CMAKE_CXX_CLANG_TIDY "${CLANG_TIDY_COMMAND};-p=${CMAKE_BINARY_DIR};--header-filter=^${CMAKE_SOURCE_DIR}/dasboot/;${CLANGTIDY_EXTRA_ARGS}" CACHE STRING "" FORCE)
+     set(CMAKE_CXX_CLANG_TIDY "${CLANG_TIDY_COMMAND};-p=${CMAKE_BINARY_DIR};--header-filter=^${CMAKE_SOURCE_DIR}/dasboot/;${CLANGTIDY_EXTRA_ARGS}")
  endif()
 
 # End clang-tidy
