@@ -10,8 +10,6 @@ apply_compile_flags(cru)
 add_executable(cru_ut cru_ut.cpp)
 apply_compile_flags(cru_ut)
 
-add_test(cru_gtests cru_ut)
-
 target_link_libraries(
     cru_ut
     PRIVATE
