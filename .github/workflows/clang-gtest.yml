@@ -1,32 +1,55 @@
-name: Clang gtest pipeline
+name: CI clang-gtest
 
-on:
-  push:
-    branches: [ master ]
-  pull_request:
-    branches: [ master ]
+on: ["push", "pull_request"]
 
 jobs:
-  build-and-test:
+  build-test-coverage:
     runs-on: ubuntu-latest
 
+    env:
+      LLVM_PROFILE_FILE: "${{ github.workspace }}/build/%p.profraw"
+
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v3
+      - name: Checkout
+        uses: actions/checkout@v4
 
-    - name: Install build tools
-      run: |
-        sudo apt-get update
-        sudo apt-get install -y clang cmake ninja-build
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y clang cmake ninja-build llvm lcov
 
-    - name: Run cmake and ninja
-      run: |
-        mkdir build
-        cd build
-        cmake .. -G Ninja
-        ninja
+      - name: Run cmake
+        run: |
+          mkdir build
+          cd build
+          cmake .. -G Ninja
 
-    - name: Run tests
-      run: |
-        cd build
-        ctest --output-on-failure
+      - name: Build
+        run: |
+          cd build
+          ninja
+
+      - name: Test
+        run: |
+          cd build
+          ctest --output-on-failure
+
+      - name: Make coverage report
+        run: |
+          cd build
+          llvm-profdata merge -sparse *.profraw -o coverage.profdata
+          TEST_BINARIES=$(find . -type f -executable -name '*_ut')
+          
+          for BIN in $TEST_BINARIES; do
+            llvm-cov export "$BIN" \
+              -instr-profile=coverage.profdata \
+              -format=lcov \
+              -ignore-filename-regex='(third_party|_deps|/usr/include|/usr/lib)' \
+              >> combined_coverage.info
+          done
+
+      - name: Coveralls GitHub Action
+        uses: coverallsapp/github-action@v2.3.6
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path-to-lcov: build/combined_coverage.info
