@@ -6,6 +6,7 @@ add_library(controller ${SOURCES} ${HEADERS})
 apply_compile_flags(controller)
 target_link_libraries(controller PUBLIC ProtobufMessages)
 add_dependencies(controller ProtobufMessages)
+target_link_libraries(controller PRIVATE libzmq)
 
 # tests:
 
@@ -18,6 +19,8 @@ target_link_libraries(
     GTest::gtest
     controller
     ProtobufMessages
+    libzmq
+    cli
 )
 
 gtest_discover_tests(controller_ut)
