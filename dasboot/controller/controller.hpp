@@ -6,10 +6,7 @@
 #include <stdlib.h>
 #include <zmq.hpp>
 
-// #include <dasboot/cli/cli.hpp>
 #include <messages.pb.h>
-
-// #define TZeroMQSocket int // TODO: VoidZeroNull0, temporary solution
 
 namespace NController {
     using std::string;
