@@ -120,62 +120,71 @@ namespace NCli {
         AddLocalFlag("attach", "", "--no-stdin", mainSettings.AttachOptions.NoStdin, NoStdinFlagDescription);
     }
 
-    void TConverter::SendMainSettings(const TMainSettings& mainSettings, const std::string& command) {
+    TSender::TSender(const std::string adress)
+    : Controller(adress) {}
+
+    void TSender::SendMainSettings(const TMainSettings& mainSettings, const std::string& command) {
         if (mainSettings.Version.PrintVersion) {
             //print version -- function in controller
         }
 
-        if (command == "info") {
+        else if (command == "info") {
             //controller handle call
         }
 
-        if (command == "build") {
+        else if (command == "build") {
             NMessages::TBuildOptions ProtoBuildOptions;
             ProtoBuildOptions = TConverter::ConvertBuildOptions(mainSettings.BuildOptions, ProtoBuildOptions);
-            //controller handle call
+            Controller.Build(ProtoBuildOptions);
         } 
 
-        if (command == "run") {
+        else if (command == "run") {
             NMessages::TRunOptions ProtoRunOptions;
             ProtoRunOptions = TConverter::ConvertRunOptions(mainSettings.RunOptions, ProtoRunOptions);
-            //controller handle call
+            Controller.Run(ProtoRunOptions);
         } 
 
-        if (command == "start") {
+        else if (command == "start") {
             NMessages::TStartOptions ProtoStartOptions;
             ProtoStartOptions = TConverter::ConvertStartOptions(mainSettings.StartOptions, ProtoStartOptions);
-            //controller handle call
+            Controller.Start(ProtoStartOptions);
         }
 
-        if (command == "stop") {
+        else if (command == "stop") {
             NMessages::TStopOptions ProtoStopOptions;
             ProtoStopOptions = TConverter::ConvertStopOptions(mainSettings.StopOptions, ProtoStopOptions);
-            //controller handle call
+            Controller.Stop(ProtoStopOptions);
         }
 
-        if (command == "ps") {
+        else if (command == "ps") {
             NMessages::TPsOptions ProtoPsOptions;
             ProtoPsOptions = TConverter::ConvertPsOptions(mainSettings.PsOptions, ProtoPsOptions);
-            //controller handle call
+            Controller.Ps(ProtoPsOptions);
         }
 
-        if (command == "rm") {
+        else if (command == "rm") {
             NMessages::TRmOptions ProtoRmOptions;
             ProtoRmOptions = TConverter::ConvertRmOptions(mainSettings.RmOptions, ProtoRmOptions);
-            //controller handle call
+            Controller.Rm(ProtoRmOptions);
         }
 
-        if (command == "exec") {
+        else if (command == "exec") {
             NMessages::TExecOptions ProtoExecOptions;
             ProtoExecOptions = TConverter::ConvertExecOptions(mainSettings.ExecOptions, ProtoExecOptions);
-            //controller handle call
+            Controller.Exec(ProtoExecOptions);
         }
 
-        if (command == "attach") {
+        else if (command == "attach") {
             NMessages::TAttachOptions ProtoAttachOptions;
             ProtoAttachOptions = TConverter::ConvertAttachOptions(mainSettings.AttachOptions, ProtoAttachOptions);
             //controller handle call
         }
+
+        else {
+            throw std::runtime_error("Unknown command");
+        }
+
+        
     }
 
     NMessages::TBuildOptions TConverter::ConvertBuildOptions(const NCli::TBuildOptions& options, NMessages::TBuildOptions& protoOptions) {

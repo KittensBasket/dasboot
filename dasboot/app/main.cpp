@@ -16,7 +16,8 @@ int main(int argc, char* argv[]) {
         return 0;
     }
     
-    NCli::TConverter::SendMainSettings(settings, command);
+    NCli::TSender Sender("ipc:///tmp/mysocket"); 
+    Sender.SendMainSettings(settings, command);
     
     return 0;
 }

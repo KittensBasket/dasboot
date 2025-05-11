@@ -97,7 +97,6 @@ namespace NCli {
 
     class TConverter {
     public:
-        static void SendMainSettings(const TMainSettings& mainSettings, const std::string& command);
         static NMessages::TRunOptions ConvertRunOptions(const NCli::TRunOptions& options, NMessages::TRunOptions& protoOptions);
         static NMessages::TBuildOptions ConvertBuildOptions(const NCli::TBuildOptions& options, NMessages::TBuildOptions& protoOptions);
         static NMessages::TStartOptions ConvertStartOptions(const NCli::TStartOptions& options, NMessages::TStartOptions& protoOptions);
@@ -106,6 +105,14 @@ namespace NCli {
         static NMessages::TRmOptions ConvertRmOptions(const NCli::TRmOptions& options, NMessages::TRmOptions& protoOptions);
         static NMessages::TExecOptions ConvertExecOptions(const NCli::TExecOptions& options, NMessages::TExecOptions& protoOptions);
         static NMessages::TAttachOptions ConvertAttachOptions(const NCli::TAttachOptions& options, NMessages::TAttachOptions& protoOptions);
+    };
+
+    class TSender {
+    private:
+        NController::TController Controller;
+    public:
+        TSender(std::string adress);
+        void SendMainSettings(const TMainSettings& mainSettings, const std::string& command);
     };
 
     std::unique_ptr<TParser> MakeDasbootParser(TMainSettings& settings);

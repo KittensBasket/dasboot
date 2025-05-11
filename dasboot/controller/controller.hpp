@@ -4,49 +4,33 @@
 #include <string>
 #include <optional>
 #include <stdlib.h>
+#include <zmq.hpp>
 
 #include <messages.pb.h>
-
-#define TZeroMQSocket int // TODO: VoidZeroNull0, temporary solution
 
 namespace NController {
     using std::string;
 
-    /* Used for default configurations retrievment: */
-    class TGlobalConfig final {
-        public:
-            string GetDaemonPort();
-
-            string GetDefaultConfigPath();
-    };
-
     class TController final {
         private:
-            const TGlobalConfig GlobalConfig;
-            TZeroMQSocket DaemonSocket;
+            zmq::context_t Context;
+            zmq::socket_t Socket;
+            std::string Adress;
 
         public:
-            TController(TGlobalConfig& globalConfig) : GlobalConfig(globalConfig) {};
+            TController(const std::string& adress);
 
-            bool WriteToDaemon();
-            bool ReadFromDaemon();
+            void StartConnection();
+            void WriteToDaemon(std::string& message);
+            std::string ReadFromDaemon();
 
-            // These ask globalConfig:
-            bool Version();
-            bool Info();
-            bool Help();
-            bool CommandHelp(const std::string command);
-
-            // These work with Daemon:
-            bool Build();
-
-            bool Start();
-
-            bool Stop();
-            bool Remove();
-
-            bool Execute();
-
-            bool List();
-    };
+            // command handlers
+            void Run(const NMessages::TRunOptions& RunOptions);
+            void Build(const NMessages::TBuildOptions& BuildOptions);
+            void Start(const NMessages::TStartOptions& StartOptions);
+            void Stop(const NMessages::TStopOptions& StopOptions);
+            void Ps(const NMessages::TPsOptions& PsOptions);
+            void Exec(const NMessages::TExecOptions& ExecOptions);
+            void Rm(const NMessages::TRmOptions& RmOptions);
+   };
 };
