@@ -17,4 +17,4 @@ target_link_libraries(
     container
 )
 
-add_test(container_gtests fs_ut)
+add_test(container_gtests container_ut)
