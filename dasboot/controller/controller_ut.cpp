@@ -159,22 +159,6 @@ TEST(ControllerUt, CommandExec) {
     ASSERT_EQ(ServerMessage, ExpectedString);
 }
 
-// TEST(ControllerUt, CommandBuild1) {
-//     NMessages::TBuildOptions ExpectedBuildOptions;
-//     string ExpectedString;
-//     ExpectedBuildOptions.set_name("Container");
-//     ExpectedBuildOptions.SerializeToString(&ExpectedString);
-
-//     NCli::TMainSettings settings;
-//     settings.BuildOptions.Name = "Container";
-//     string command = "build";
-//     NCli::TSender Sender("ipc:///tmp/testsocket"); 
-//     Sender.SendMainSettings(settings, command);
-//     string ServerMessage = server.GetMessage();
-//     server.SendMessage();
-
-//     ASSERT_EQ(ServerMessage, ExpectedString);
-// }
 
 int main(int argc, char** argv) {
     ::testing::InitGoogleTest(&argc, argv);

@@ -128,57 +128,63 @@ namespace NCli {
             //print version -- function in controller
         }
 
-        if (command == "info") {
+        else if (command == "info") {
             //controller handle call
         }
 
-        if (command == "build") {
+        else if (command == "build") {
             NMessages::TBuildOptions ProtoBuildOptions;
             ProtoBuildOptions = TConverter::ConvertBuildOptions(mainSettings.BuildOptions, ProtoBuildOptions);
             Controller.Build(ProtoBuildOptions);
         } 
 
-        if (command == "run") {
+        else if (command == "run") {
             NMessages::TRunOptions ProtoRunOptions;
             ProtoRunOptions = TConverter::ConvertRunOptions(mainSettings.RunOptions, ProtoRunOptions);
             Controller.Run(ProtoRunOptions);
         } 
 
-        if (command == "start") {
+        else if (command == "start") {
             NMessages::TStartOptions ProtoStartOptions;
             ProtoStartOptions = TConverter::ConvertStartOptions(mainSettings.StartOptions, ProtoStartOptions);
             Controller.Start(ProtoStartOptions);
         }
 
-        if (command == "stop") {
+        else if (command == "stop") {
             NMessages::TStopOptions ProtoStopOptions;
             ProtoStopOptions = TConverter::ConvertStopOptions(mainSettings.StopOptions, ProtoStopOptions);
             Controller.Stop(ProtoStopOptions);
         }
 
-        if (command == "ps") {
+        else if (command == "ps") {
             NMessages::TPsOptions ProtoPsOptions;
             ProtoPsOptions = TConverter::ConvertPsOptions(mainSettings.PsOptions, ProtoPsOptions);
             Controller.Ps(ProtoPsOptions);
         }
 
-        if (command == "rm") {
+        else if (command == "rm") {
             NMessages::TRmOptions ProtoRmOptions;
             ProtoRmOptions = TConverter::ConvertRmOptions(mainSettings.RmOptions, ProtoRmOptions);
             Controller.Rm(ProtoRmOptions);
         }
 
-        if (command == "exec") {
+        else if (command == "exec") {
             NMessages::TExecOptions ProtoExecOptions;
             ProtoExecOptions = TConverter::ConvertExecOptions(mainSettings.ExecOptions, ProtoExecOptions);
             Controller.Exec(ProtoExecOptions);
         }
 
-        if (command == "attach") {
+        else if (command == "attach") {
             NMessages::TAttachOptions ProtoAttachOptions;
             ProtoAttachOptions = TConverter::ConvertAttachOptions(mainSettings.AttachOptions, ProtoAttachOptions);
             //controller handle call
         }
+
+        else {
+            throw std::exception("Unknown command");
+        }
+
+        
     }
 
     NMessages::TBuildOptions TConverter::ConvertBuildOptions(const NCli::TBuildOptions& options, NMessages::TBuildOptions& protoOptions) {
