@@ -24,7 +24,7 @@ cd dasboot
 Run CMake and then build with Ninja:
 ```bash
 mkdir build && \
-cd build \
+cd build && \
 cmake .. -G Ninja && \
 ninja
 ```
