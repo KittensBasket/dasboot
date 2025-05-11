@@ -27,4 +27,5 @@ target_link_libraries(
     cru
 )
 
-add_test(cru_gtests fs_ut)
+gtest_discover_tests(cru_ut)
+gtest_discover_tests(fs_ut)
