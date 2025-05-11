@@ -27,6 +27,7 @@ foreach(proto_file ${PROTO_FILES})
 endforeach()
 
 add_library(ProtobufMessages STATIC ${GENERATED_PROTO_SRCS} ${GENERATED_PROTO_HDRS})
+# We do not want clang-tidy to check protobuf generated files
 set_target_properties(ProtobufMessages PROPERTIES CXX_CLANG_TIDY "")
 target_link_libraries(ProtobufMessages PRIVATE protobuf::libprotobuf)
 # SYSTEM here is required cause we do not want -Werror to be applied to protobuf headers
