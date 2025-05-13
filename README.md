@@ -1,3 +1,4 @@
+[![Coverage Status](https://coveralls.io/repos/github/KittensBasket/dasboot/badge.svg?branch=master)](https://coveralls.io/github/KittensBasket/dasboot?branch=master)
 # Dasboot
 
 A small containerization utility, written in C/C++. Made as team pet project.
