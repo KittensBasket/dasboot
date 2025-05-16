@@ -53,6 +53,8 @@ namespace NOs {
     pid_t GetCurrentPid();
     uid_t GetCurrentUid();
 
+    NCommon::TStatus DaemonizeCurrentProcess();
+
     class TPipe {
     public:
         TPipe();

@@ -2,6 +2,8 @@
 
 #include <sstream>
 
+#define DASBOOTD_SOCK "/var/run/dasboot.sock"
+
 class MakeString {
 public:
     template<class T>
