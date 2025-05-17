@@ -19,7 +19,7 @@ TEST(CruUt, CreateDeepFileError) {
     std::string path = "tmp/testfile.txt";
     NCommon::TStatus status = NOs::CreateFile(path);
     EXPECT_EQ(status.Code, NCommon::TStatus::ECode::Failed);
-    EXPECT_EQ(status.Error, "Path 'tmp' does not exists");
+    EXPECT_EQ(status.Error, "Path 'tmp' doesnt exists");
     EXPECT_TRUE(!NOs::IsFileExists(path));
     EXPECT_TRUE(!NOs::IsDirectoryExists("tmp"));
 }
@@ -48,7 +48,7 @@ TEST(CruUt, CreateDeepDirectoryError) {
     std::string path = "tmp/testdir";
     NCommon::TStatus status = NOs::CreateDirectory(path);
     EXPECT_EQ(status.Code, NCommon::TStatus::ECode::Failed);
-    EXPECT_EQ(status.Error, "Path 'tmp' does not exists");
+    EXPECT_EQ(status.Error, "Path 'tmp' doesnt exists");
     EXPECT_TRUE(!NOs::IsDirectoryExists(path));
     NOs::RemoveDirectory(path);
     EXPECT_TRUE(!NOs::IsDirectoryExists(path));
