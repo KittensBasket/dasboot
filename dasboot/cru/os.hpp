@@ -32,6 +32,7 @@ namespace NOs {
     bool IsDirectoryExists(const std::string& path);
     bool IsDirectoryEmpty(const std::string& path);
 
+    std::pair<NCommon::TStatus, std::string> ReadFile(const std::string& path);
     NCommon::TStatus WriteToFile(const std::string& path, const std::string& text);
     NCommon::TStatus Copy(const std::string& source, const std::string& target);
 

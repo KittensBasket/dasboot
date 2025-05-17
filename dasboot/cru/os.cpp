@@ -146,6 +146,23 @@ namespace {
         return { NCommon::TStatus::ECode::Success };
     }
 
+    std::pair<NCommon::TStatus, std::string> ReadFile(const std::string& path) {
+        if (!IsPathExists(path)) {
+            std::string error = MakeString() << "Path '" << path << "' does not exists";
+            return {{ NCommon::TStatus::ECode::Failed, std::move(error) }, ""};
+        }
+
+        if (!IsFile(path)) {
+            std::string error = MakeString() << '\'' << path << "' is not file";
+            return {{ NCommon::TStatus::ECode::Failed, std::move(error) }, ""};
+        }
+
+        std::ifstream fin(path, std::ofstream::in);
+        std::string result = "";
+        while (fin >> result);
+        return {{NCommon::TStatus::ECode::Success}, result};
+    }
+
     NCommon::TStatus WriteToFile(const std::string& path, const std::string& text) {
         if (!IsPathExists(path)) {
             std::string error = MakeString() << "Path '" << path << "' does not exists";

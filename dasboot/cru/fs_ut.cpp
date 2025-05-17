@@ -130,6 +130,20 @@ TEST(CruUt, CheckCopyFiles) {
     }
 }
 
+TEST(CruUt, WriteReadFile) {
+    std::string input = "Hello!!!";
+    std::string file = "hello.txt";
+    auto createStatus = NOs::CreateFile(file, false, 0700);
+    EXPECT_EQ(createStatus.Code, NCommon::TStatus::ECode::Success);
+    auto writeStatus = NOs::WriteToFile(file, input);
+    EXPECT_EQ(writeStatus.Code, NCommon::TStatus::ECode::Success);
+    auto [status, result] = NOs::ReadFile(file);
+    EXPECT_EQ(status.Code, NCommon::TStatus::ECode::Success);
+    EXPECT_EQ(status.Error, "");
+    EXPECT_EQ(result, input);
+    NOs::RemoveFile(file);
+}
+
 int main(int argc, char** argv) {
     std::string testDir = "ut_tmp_dir";
     NOs::CreateDirectory(testDir);
