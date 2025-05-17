@@ -48,9 +48,8 @@ jobs:
               >> combined_coverage.info
           done
 
-     # TEMPORARILY DISABLED COVERALLS BECAUESE OF DECTEASED COVERAGE ISSUDE
-     # - name: Coveralls GitHub Action
-     #   uses: coverallsapp/github-action@v2.3.6
-     #   with:
-     #     github-token: ${{ secrets.GITHUB_TOKEN }}
-     #     path-to-lcov: build/combined_coverage.info
+      - name: Coveralls GitHub Action
+        uses: coverallsapp/github-action@v2.3.6
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path-to-lcov: build/combined_coverage.info
