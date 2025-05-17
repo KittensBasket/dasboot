@@ -2,39 +2,20 @@
 
 namespace NOs {
 namespace {
-    NCommon::TStatus PreCreate(const std::string& path, bool isDeep, mode_t mode) {
-        if (IsPathExists(path)) {
-            std::string error = MakeString() << "Path \'" << path << "\' already exists";
-            return { NCommon::TStatus::ECode::Failed, std::move(error) };
-        }
+    std::string GetPrefix(const std::string& path) {
+        return fs::path(path).parent_path().string();
+    }
 
-        if (!isDeep) {
-            for (const auto& dir : fs::path(path).parent_path()) {
-                if (!IsDirectoryExists(dir.string())) {
-                    std::string error = MakeString() << "Path \'" << dir.string() << "\' does not exists";
+    NCommon::TStatus PreCreate(const std::string& path, mode_t mode) {
+        fs::path currentDir = "";
+
+        for (const auto &part : fs::path(path) ) {
+            currentDir /= part;
+
+            if (!IsDirectoryExists(currentDir)) {
+                if (mkdir(currentDir.c_str(), mode)) {
+                    std::string error = MakeString() << "PreCreate() failed: " << strerror(errno);
                     return { NCommon::TStatus::ECode::Failed, std::move(error) };
-                }
-            }
-        } else {
-            std::string firstCreatedDirectory = "";
-            std::string currentDirectory = "";
-            for (const auto& dir : fs::path(path).parent_path()) {
-                if (!currentDirectory.empty()) {
-                    currentDirectory += "/";
-                }
-                currentDirectory += dir.string();
-
-                if (!IsDirectoryExists(currentDirectory)) {
-                    auto status = CreateDirectory(currentDirectory, true, mode);
-                    if (status.Code != NCommon::TStatus::ECode::Success) {
-                        fs::remove_all(firstCreatedDirectory);
-                        std::string error = MakeString() << "CreateDirectory() failed: " << status.Error;
-                        return { NCommon::TStatus::ECode::Failed, std::move(error) };
-                    }
-
-                    if (firstCreatedDirectory.empty()) {
-                        firstCreatedDirectory = currentDirectory;
-                    }
                 }
             }
         }
@@ -84,10 +65,17 @@ namespace {
     }
 
     NCommon::TStatus CreateDirectory(const std::string& path, bool isDeep, mode_t mode) {
-        auto status = PreCreate(path, isDeep, mode);
+        std::string prefix = GetPrefix(path);
+        if (isDeep) {
+            auto status = PreCreate(prefix, mode);
+            if (status.Code != NCommon::TStatus::ECode::Success) {
+                return status;
+            }
+        }
 
-        if (status.Code != NCommon::TStatus::ECode::Success) {
-            return status;
+        if (!prefix.empty() && !IsDirectoryExists(prefix)) {
+            std::string error = MakeString() << "Path '" << prefix << "' doesnt exists";
+            return { NCommon::TStatus::ECode::Failed, std::move(error) };
         }
 
         if (mkdir(path.c_str(), mode)) {
@@ -98,10 +86,17 @@ namespace {
     }
 
     NCommon::TStatus CreateFile(const std::string& path, bool isDeep, mode_t mode) {
-        auto status = PreCreate(path, isDeep, mode);
+        std::string prefix = GetPrefix(path);
+        if (isDeep) {
+            auto status = PreCreate(prefix, mode);
+            if (status.Code != NCommon::TStatus::ECode::Success) {
+                return status;
+            }
+        }
 
-        if (status.Code != NCommon::TStatus::ECode::Success) {
-            return status;
+        if (!prefix.empty() && !IsDirectoryExists(prefix)) {
+            std::string error = MakeString() << "Path '" << prefix << "' doesnt exists";
+            return { NCommon::TStatus::ECode::Failed, std::move(error) };
         }
 
         if (creat(path.c_str(), mode) == -1) {
@@ -149,6 +144,23 @@ namespace {
         }
 
         return { NCommon::TStatus::ECode::Success };
+    }
+
+    std::pair<NCommon::TStatus, std::string> ReadFile(const std::string& path) {
+        if (!IsPathExists(path)) {
+            std::string error = MakeString() << "Path '" << path << "' does not exists";
+            return {{ NCommon::TStatus::ECode::Failed, std::move(error) }, ""};
+        }
+
+        if (!IsFile(path)) {
+            std::string error = MakeString() << '\'' << path << "' is not file";
+            return {{ NCommon::TStatus::ECode::Failed, std::move(error) }, ""};
+        }
+
+        std::ifstream fin(path, std::ofstream::in);
+        std::string result = "";
+        while (fin >> result);
+        return {{NCommon::TStatus::ECode::Success}, result};
     }
 
     NCommon::TStatus WriteToFile(const std::string& path, const std::string& text) {
@@ -252,6 +264,14 @@ namespace {
 
     uid_t GetCurrentUid() {
         return getuid();
+    }
+
+    NCommon::TStatus SetSignalFromParentOnDie(int signal) {
+        if (prctl(PR_SET_PDEATHSIG, signal) == -1) {
+            return { NCommon::TStatus::ECode::Failed, "SetSignalFromParentOnDie() failed" };
+        }
+
+        return { NCommon::TStatus::ECode::Success };
     }
 
 // <TPipe>

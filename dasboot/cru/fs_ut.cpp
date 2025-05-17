@@ -19,7 +19,7 @@ TEST(CruUt, CreateDeepFileError) {
     std::string path = "tmp/testfile.txt";
     NCommon::TStatus status = NOs::CreateFile(path);
     EXPECT_EQ(status.Code, NCommon::TStatus::ECode::Failed);
-    EXPECT_EQ(status.Error, "Path 'tmp' does not exists");
+    EXPECT_EQ(status.Error, "Path 'tmp' doesnt exists");
     EXPECT_TRUE(!NOs::IsFileExists(path));
     EXPECT_TRUE(!NOs::IsDirectoryExists("tmp"));
 }
@@ -48,7 +48,7 @@ TEST(CruUt, CreateDeepDirectoryError) {
     std::string path = "tmp/testdir";
     NCommon::TStatus status = NOs::CreateDirectory(path);
     EXPECT_EQ(status.Code, NCommon::TStatus::ECode::Failed);
-    EXPECT_EQ(status.Error, "Path 'tmp' does not exists");
+    EXPECT_EQ(status.Error, "Path 'tmp' doesnt exists");
     EXPECT_TRUE(!NOs::IsDirectoryExists(path));
     NOs::RemoveDirectory(path);
     EXPECT_TRUE(!NOs::IsDirectoryExists(path));
@@ -128,6 +128,20 @@ TEST(CruUt, CheckCopyFiles) {
         EXPECT_EQ(status.Error, "");
         EXPECT_TRUE(!NOs::IsDirectoryExists(to));
     }
+}
+
+TEST(CruUt, WriteReadFile) {
+    std::string input = "Hello!!!";
+    std::string file = "hello.txt";
+    auto createStatus = NOs::CreateFile(file, false, 0700);
+    EXPECT_EQ(createStatus.Code, NCommon::TStatus::ECode::Success);
+    auto writeStatus = NOs::WriteToFile(file, input);
+    EXPECT_EQ(writeStatus.Code, NCommon::TStatus::ECode::Success);
+    auto [status, result] = NOs::ReadFile(file);
+    EXPECT_EQ(status.Code, NCommon::TStatus::ECode::Success);
+    EXPECT_EQ(status.Error, "");
+    EXPECT_EQ(result, input);
+    NOs::RemoveFile(file);
 }
 
 int main(int argc, char** argv) {
