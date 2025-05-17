@@ -187,13 +187,40 @@ namespace NCli {
         
     }
 
+    std::string TConverter::ReadDasbootFile(const std::string& pathToDasbootFile) {
+        // FILE* fp = fopen(pathToDasbootFile, "r");
+        
+        // char readBuffer[65536];
+        // rapidjson::FileReadStream is(fp, readBuffer, sizeof(readBuffer));
+        // rapidjson::Document d;
+        // d.ParseStream(is);
+
+        // // Close the file
+        // fclose(fp);
+
+        string responseString = R"({"response":[{"id":210700286,"first_name":"Lindsey","last_name":"Stirling"}]})";
+        nlohmann::json responseJson = json::parse(responseString);
+        nlohmann::json object = responseJson["response"];
+        string first_name = object[0]["first_name"];
+        string last_name = object[0]["last_name"];
+        std::cout << first_name << std::endl;
+        std::cout << last_name << std::endl;
+
+        return "";
+    }
+
+    std::string TConverter::FileDescription(const std::string& pathToScript) {
+        return "";
+    }
+
     NMessages::TBuildOptions TConverter::ConvertBuildOptions(const NCli::TBuildOptions& options, NMessages::TBuildOptions& protoOptions) {
         if (options.Name.has_value()) {
             protoOptions.set_name(options.Name.value());
         }
 
         if (options.PathToDasbootFile.has_value()) {
-            protoOptions.set_pathtodasbootfile(options.PathToDasbootFile.value());
+            std::string DasbootFile = ReadDasbootFile(options.PathToDasbootFile.value());
+            protoOptions.set_pathtodasbootfile(DasbootFile);
         }
 
         return protoOptions;

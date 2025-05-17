@@ -7,6 +7,7 @@ apply_compile_flags(cli)
 target_link_libraries(cli PUBLIC CLI11::CLI11)
 target_link_libraries(cli PUBLIC ProtobufMessages)
 target_link_libraries(cli PUBLIC controller)
+target_link_libraries(cli PUBLIC json)
 
 # tests:
 
@@ -20,6 +21,7 @@ target_link_libraries(
     cli
     ProtobufMessages
     controller
+    json
 )
 
 gtest_discover_tests(cli_ut)

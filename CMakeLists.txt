@@ -83,6 +83,22 @@ include_directories(${protobuf_INCLUDE_DIR})
 include_directories(${protobuf_SOURCE_DIR}/src)
 # </Protobuf>
 
+# <nlohmann_json>
+set(json_BUILD_TESTS OFF CACHE BOOL "" FORCE)
+set(json_INSTALL OFF CACHE BOOL "" FORCE)
+
+FetchContent_Declare(
+    json 
+    GIT_REPOSITORY https://github.com/nlohmann/json
+    GIT_TAG v3.12.0
+)
+
+FetchContent_MakeAvailable(json)
+
+include_directories(${json_INCLUDE_DIR})
+include_directories(${json_SOURCE_DIR}/src)
+# </nlohmann_json>
+
 # ========================================== End install dependencies ==========================================
 
 # Start flags

@@ -4,6 +4,7 @@
 #include <iostream>
 #include <optional>
 #include <unordered_map>
+#include <json.hpp>
 
 #include <dasboot/controller/controller.hpp>
 #include <messages.pb.h>
@@ -97,6 +98,8 @@ namespace NCli {
 
     class TConverter {
     public:
+        static std::string ReadDasbootFile(const std::string& path);
+        static std::string FileDescription(const std::string& pathToScript);
         static NMessages::TRunOptions ConvertRunOptions(const NCli::TRunOptions& options, NMessages::TRunOptions& protoOptions);
         static NMessages::TBuildOptions ConvertBuildOptions(const NCli::TBuildOptions& options, NMessages::TBuildOptions& protoOptions);
         static NMessages::TStartOptions ConvertStartOptions(const NCli::TStartOptions& options, NMessages::TStartOptions& protoOptions);
