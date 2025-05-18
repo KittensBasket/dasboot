@@ -192,7 +192,7 @@ NMessages::TResult TDaemon::DoStart(const NMessages::TStartOptions &options)
 		}
 		else
 		{
-			Containers.at(id).Exec();
+			// Containers.at(id).Exec();
 			result.set_code(NMessages::ReturnCode::SUCESS);
 			result.set_text("Successfully started container");
 		}
@@ -206,7 +206,7 @@ NMessages::TResult TDaemon::DoStart(const NMessages::TStartOptions &options)
 		}
 		else
 		{
-			Containers.at(NameToId.at(options.name())).Exec();
+			// Containers.at(NameToId.at(options.name())).Exec();
 
 			result.set_code(NMessages::ReturnCode::SUCESS);
 			result.set_text("Successfully started container");

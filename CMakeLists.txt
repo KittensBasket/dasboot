@@ -63,7 +63,6 @@ FetchContent_Declare(
 
 FetchContent_MakeAvailable(googletest)
 include(GoogleTest)
-
 # </GTest>
 
 # <Protobuf>
@@ -82,6 +81,21 @@ FetchContent_MakeAvailable(protobuf)
 include_directories(${protobuf_INCLUDE_DIR})
 include_directories(${protobuf_SOURCE_DIR}/src)
 # </Protobuf>
+
+# <nlohmann_json>
+set(json_BUILD_TESTS OFF CACHE BOOL "" FORCE)
+set(json_INSTALL OFF CACHE BOOL "" FORCE)
+
+FetchContent_Declare(
+    json 
+    GIT_REPOSITORY https://github.com/nlohmann/json
+    GIT_TAG v3.12.0
+)
+
+FetchContent_MakeAvailable(json)
+
+include_directories(${json_SOURCE_DIR}/include)
+# </nlohmann_json>
 
 # ========================================== End install dependencies ==========================================
 
@@ -108,11 +122,12 @@ function(apply_compile_flags target)
             -Wsign-conversion
             -Wsign-promo
             -Wzero-as-null-pointer-constant
+            -Wnonnull
             
             -O3
-            -ffast-math
+            #-ffast-math - could not be used here, because json headers include uses of INF
 
-            # For coverage
+            # For coverage:
             -fprofile-instr-generate
             -fcoverage-mapping
         )
@@ -138,23 +153,15 @@ find_program(CLANG_TIDY_COMMAND NAMES clang-tidy)
          "-warnings-as-errors=*"
      )
 
-     set(CMAKE_CXX_CLANG_TIDY "${CLANG_TIDY_COMMAND};-p=${CMAKE_BINARY_DIR};--header-filter=^${CMAKE_SOURCE_DIR}/dasboot/;${CLANGTIDY_EXTRA_ARGS}")
+     set(CMAKE_CXX_CLANG_TIDY 
+        ${CLANG_TIDY_COMMAND};
+        -p=${CMAKE_BINARY_DIR};
+        --header-filter='*/dasboot/*';
+        ${CLANGTIDY_EXTRA_ARGS};)
  endif()
 
 # End clang-tidy
 
 include_directories(.)
-
 enable_testing()
-
 add_subdirectory(dasboot)
-
-# Unit-tests
-
-option(MYLIB_TESTING "Turn on ut-testing" ON)
-
-if(NOT MYLIB_TESTING)
-    message(STATUS "Turned off ut-testing")
-else()
-    enable_testing()
-endif()

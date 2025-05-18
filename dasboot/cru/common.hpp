@@ -24,7 +24,8 @@ class TStatus {
 public:
     enum ECode {
         Success = 0,
-        Failed = 1
+        Failed = 1,
+        Ignored = 2
     };
 
     ECode Code = ECode::Success;

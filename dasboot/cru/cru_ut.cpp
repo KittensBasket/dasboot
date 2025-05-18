@@ -43,6 +43,72 @@ TEST(CruUt, CheckTPipeWithFork) {
     }
 }
 
+TEST(CruUt, RunScript) {
+    NOs::TPipe pipe;
+    auto [pid, status] = NOs::Fork();
+
+    if (pid == 0) { // child
+        pipe.CloseRead();
+        if (dup2(pipe.GetWriteFd(), STDOUT_FILENO) == -1) {
+            FAIL() << "dup2";
+            exit(1);
+        }
+
+        pipe.CloseWrite();
+        std::string script = R"(
+            echo 'Hello, world!';
+        )";
+
+        NOs::RunScriptAsString(script);
+        exit(0);
+    } else if (pid > 0) {
+        pipe.CloseWrite();
+        waitpid(pid, nullptr, 0);
+        std::string output = pipe.ReadAll();
+        EXPECT_EQ(output, "Hello, world!\n");
+    } else {
+        FAIL() << "Fork failed";
+    }
+}
+
+TEST(CruUt, RunLongScript) {
+    NOs::TPipe pipe;
+    auto [pid, status] = NOs::Fork();
+
+    if (pid == 0) { // child
+        pipe.CloseRead();
+        if (dup2(pipe.GetWriteFd(), STDOUT_FILENO) == -1) {
+            FAIL() << "dup2";
+            exit(1);
+        }
+
+        if (dup2(pipe.GetWriteFd(), STDERR_FILENO) == -1) {
+            FAIL() << "dup2";
+            exit(1);
+        }
+
+        pipe.CloseWrite();
+        std::string script = R"(
+            for i in $(seq 1 3)
+            do
+                echo "hello, exec world!"
+                sleep 1
+            done
+        )";
+
+        NOs::RunScriptAsString(script);
+        exit(0);
+    } else if (pid > 0) {
+        pipe.CloseWrite();
+        waitpid(pid, nullptr, 0);
+        std::string expected = "hello, exec world!\nhello, exec world!\nhello, exec world!\n";
+        std::string output = pipe.ReadAll();
+        EXPECT_EQ(output, expected);
+    } else {
+        FAIL() << "Fork failed";
+    }
+}
+
 int main(int argc, char** argv) {
     ::testing::InitGoogleTest(&argc, argv);
     auto result = RUN_ALL_TESTS();
