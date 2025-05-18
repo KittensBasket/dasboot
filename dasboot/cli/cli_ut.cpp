@@ -1,6 +1,10 @@
 #include <string>
 #include <gtest/gtest.h>
 #include <dasboot/cli/cli.hpp>
+#include <dasboot/cru/os.hpp>
+#include <nlohmann/json.hpp>
+
+using string = std::string;
 
 TEST(CliUt, ConstructHelp) {
     NCli::TParser parser("Some description");
@@ -10,9 +14,9 @@ TEST(CliUt, ConstructHelp) {
     parser.AddGlobalFlag("-f", "--flag", flag, "This is flag.");
 
     {
-        std::string name = "super-command";
+        string name = "super-command";
         parser.AddGlobalCommand(name, "Super command.");
-        std::optional<std::string> opt;
+        std::optional<string> opt;
         parser.AddLocalOption(name, "-o", "--option", opt, "Very good option.");
         bool commandFlag = false;
         parser.AddLocalFlag(name, "-f", "--flag", commandFlag, "Flag from super-command command.");
@@ -72,11 +76,23 @@ SUBCOMMANDS:
 }
 
 TEST(CliUt, GetProtoCommandBuild0) {
+    string DasbootFile = "DasbootFile", ScriptFile = "script.py";
+    NOs::CreateFile(DasbootFile, false, 0700);
+    NOs::CreateFile(ScriptFile, false, 0700);
+
+    string input_1 = R"({
+	"network" : false,
+	"script_file" : "script.py"
+})", 
+                input_2 = R"(print('HELLO WORLD'))";
+    NOs::WriteToFile(DasbootFile, input_1);
+    NOs::WriteToFile(ScriptFile, input_2);
+
     NCli::TMainSettings settings;
     auto parser = NCli::MakeDasbootParser(settings);
 
     const char* argv0[] = {
-    "./dasboot", "build", "-n", "meow", "-f", "/home/bibeda"
+    "./dasboot", "build", "-n", "meow", "-f", "DasbootFile"
     };
     int argc = sizeof(argv0)/sizeof(argv0[0]);
     char** argv = const_cast<char**>(argv0);
@@ -87,12 +103,20 @@ TEST(CliUt, GetProtoCommandBuild0) {
     ProtoBuildOptions = NCli::TConverter::ConvertBuildOptions(settings.BuildOptions, ProtoBuildOptions);
     auto protoText = ProtoBuildOptions.DebugString();
 
-    auto excpected =
-R"(name: "meow"
-pathtodasbootfile: "/home/bibeda"
-)";
+    NMessages::TBuildOptions ExpectedProtoBuildOptions;
+    nlohmann::json resultJson;
+    std::vector<string> ScriptCode;
+    ScriptCode.push_back(input_2);
+    resultJson["network"] = false;
+    resultJson["script_code"] = ScriptCode;
+    ExpectedProtoBuildOptions.set_name("meow");
+    ExpectedProtoBuildOptions.set_dasboot_file(resultJson.dump());
+    auto expectedText = ExpectedProtoBuildOptions.DebugString();
 
-    ASSERT_EQ(protoText, excpected);
+    NOs::RemoveFile(DasbootFile);
+    NOs::RemoveFile(ScriptFile);
+
+    ASSERT_EQ(protoText, expectedText);
 }
 
 TEST(CliUt, GetProtoCommandBuild1) {
@@ -119,11 +143,25 @@ R"(name: "meow"
 }
 
 TEST(CliUt, GetProtoCommandBuild2) {
+    string DasbootFile = "DasbootFile", ScriptFile = "script.py";
+    NOs::CreateFile(DasbootFile, false, 0700);
+    NOs::CreateFile(ScriptFile, false, 0700);
+
+    string input_1 = R"({
+	"network" : true,
+	"script_file" : "script.py"
+})", 
+                input_2 = R"(n = 3
+for i in range(3):
+	print("HELLO!!!"))";
+    NOs::WriteToFile(DasbootFile, input_1);
+    NOs::WriteToFile(ScriptFile, input_2);
+
     NCli::TMainSettings settings;
     auto parser = NCli::MakeDasbootParser(settings);
 
     const char* argv0[] = {
-    "./dasboot", "build", "--file", "/home/bibeda"
+    "./dasboot", "build", "--file", "DasbootFile"
     };
     int argc = sizeof(argv0)/sizeof(argv0[0]);
     char** argv = const_cast<char**>(argv0);
@@ -134,14 +172,73 @@ TEST(CliUt, GetProtoCommandBuild2) {
     ProtoBuildOptions = NCli::TConverter::ConvertBuildOptions(settings.BuildOptions, ProtoBuildOptions);
     auto protoText = ProtoBuildOptions.DebugString();
 
-    auto excpected =
-R"(pathtodasbootfile: "/home/bibeda"
-)";
+    NMessages::TBuildOptions ExpectedProtoBuildOptions;
+    nlohmann::json resultJson;
+    std::vector<string> ScriptCode;
+    ScriptCode.push_back(input_2);
+    resultJson["network"] = true;
+    resultJson["script_code"] = ScriptCode;
+    ExpectedProtoBuildOptions.set_dasboot_file(resultJson.dump());
+    auto expectedText = ExpectedProtoBuildOptions.DebugString();
 
-    ASSERT_EQ(protoText, excpected);
+    NOs::RemoveFile(DasbootFile);
+    NOs::RemoveFile(ScriptFile);
+
+    ASSERT_EQ(protoText, expectedText);
 }
 
 TEST(CliUt, GetProtoCommandBuild3) {
+    string DasbootFile = "DasbootFile", 
+                ScriptFile_1 = "script_1.py",
+                ScriptFile_2 = "script_2.py";
+    NOs::CreateFile(DasbootFile, false, 0700);
+    NOs::CreateFile(ScriptFile_1, false, 0700);
+    NOs::CreateFile(ScriptFile_2, false, 0700);
+
+    string input_1 = R"({
+	"network" : true,
+	"script_file" : ["script_1.py", "script_2.py"]
+})", 
+                input_2 = R"(n = 3
+for i in range(3):
+	print("HELLO!!!"))";
+    NOs::WriteToFile(DasbootFile, input_1);
+    NOs::WriteToFile(ScriptFile_1, input_2);
+    NOs::WriteToFile(ScriptFile_2, input_2);
+
+    NCli::TMainSettings settings;
+    auto parser = NCli::MakeDasbootParser(settings);
+
+    const char* argv0[] = {
+    "./dasboot", "build", "--file", "DasbootFile"
+    };
+    int argc = sizeof(argv0)/sizeof(argv0[0]);
+    char** argv = const_cast<char**>(argv0);
+
+    parser->Parse(argc, argv);
+
+    NMessages::TBuildOptions ProtoBuildOptions;
+    ProtoBuildOptions = NCli::TConverter::ConvertBuildOptions(settings.BuildOptions, ProtoBuildOptions);
+    auto protoText = ProtoBuildOptions.DebugString();
+
+    NMessages::TBuildOptions ExpectedProtoBuildOptions;
+    nlohmann::json resultJson;
+    std::vector<string> ScriptCode;
+    ScriptCode = {input_2, input_2};
+    resultJson["network"] = true;
+    resultJson["script_code"] = ScriptCode;
+    ExpectedProtoBuildOptions.set_dasboot_file(resultJson.dump());
+    auto expectedText = ExpectedProtoBuildOptions.DebugString();
+
+    NOs::RemoveFile(DasbootFile);
+    NOs::RemoveFile(ScriptFile_1);
+    NOs::RemoveFile(ScriptFile_2);
+
+    ASSERT_EQ(protoText, expectedText);
+}
+
+
+TEST(CliUt, GetProtoCommandBuild4) {
     NCli::TMainSettings settings;
     auto parser = NCli::MakeDasbootParser(settings);
 
@@ -575,6 +672,117 @@ R"()";
 
     ASSERT_EQ(protoText, excpected);
 }
+
+TEST(CliUt, GetProtoCommandExec2) {
+    string ExecFile = "ExecFile", CopyFile = "file.txt", ScriptFile = "script.py";
+    NOs::CreateFile(ExecFile, false, 0700);
+    NOs::CreateFile(CopyFile, false, 0700);
+    NOs::CreateFile(ScriptFile, false, 0700);
+
+    string input_1 = R"({
+	"network" : true,
+	"copy_file" : "file.txt",
+	"script_file" : "script.py"
+})", 
+                input_2 = R"(HELLO WORLD)",
+                input_3 = R"(print("HELLO!!!"))";
+    NOs::WriteToFile(ExecFile, input_1);
+    NOs::WriteToFile(CopyFile, input_2);
+    NOs::WriteToFile(ScriptFile, input_3);
+
+
+    NCli::TMainSettings settings;
+    auto parser = NCli::MakeDasbootParser(settings);
+
+    const char* argv0[] = {
+    "./dasboot", "exec", "--file", "ExecFile"
+    };
+    int argc = sizeof(argv0)/sizeof(argv0[0]);
+    char** argv = const_cast<char**>(argv0);
+
+    parser->Parse(argc, argv);
+
+    NMessages::TExecOptions ProtoExecOptions;
+    ProtoExecOptions = NCli::TConverter::ConvertExecOptions(settings.ExecOptions, ProtoExecOptions);
+    auto protoText = ProtoExecOptions.DebugString();
+
+    NMessages::TExecOptions ExpectedProtoExecOptions;
+    nlohmann::json resultJson;
+    std::vector<string> CodeFile, ScriptCode;
+    CodeFile.push_back(input_2);
+    ScriptCode.push_back(input_3);
+    resultJson["network"] = true;
+    resultJson["copy_file"] = CodeFile;
+    resultJson["script_code"] = ScriptCode;
+    ExpectedProtoExecOptions.set_exec_file(resultJson.dump());
+    auto expectedText = ExpectedProtoExecOptions.DebugString();
+
+    NOs::RemoveFile(ExecFile);
+    NOs::RemoveFile(CopyFile);
+    NOs::RemoveFile(ScriptFile);
+
+    ASSERT_EQ(protoText, expectedText);
+}
+
+TEST(CliUt, GetProtoCommandExec3) {
+    string ExecFile = "ExecFile", 
+                CopyFile_1 = "file_1.txt", CopyFile_2 = "file_2.txt", 
+                ScriptFile_1 = "script_1.py", ScriptFile_2 = "script_2.py";
+    NOs::CreateFile(ExecFile, false, 0700);
+    NOs::CreateFile(CopyFile_1, false, 0700);
+    NOs::CreateFile(CopyFile_2, false, 0700);
+    NOs::CreateFile(ScriptFile_1, false, 0700);
+    NOs::CreateFile(ScriptFile_2, false, 0700);
+
+    string input_1 = R"({
+	"network" : true,
+	"copy_file" : ["file_1.txt", "file_2.txt"],
+	"script_file" : ["script_1.py", "script_2.py"]
+})", 
+                input_2 = R"(HELLO WORLD)",
+                input_3 = R"(print("HELLO!!!"))";
+    NOs::WriteToFile(ExecFile, input_1);
+    NOs::WriteToFile(CopyFile_1, input_2);
+    NOs::WriteToFile(CopyFile_2, input_2);
+    NOs::WriteToFile(ScriptFile_1, input_3);
+    NOs::WriteToFile(ScriptFile_2, input_3);
+
+
+    NCli::TMainSettings settings;
+    auto parser = NCli::MakeDasbootParser(settings);
+
+    const char* argv0[] = {
+    "./dasboot", "exec", "--file", "ExecFile"
+    };
+    int argc = sizeof(argv0)/sizeof(argv0[0]);
+    char** argv = const_cast<char**>(argv0);
+
+    parser->Parse(argc, argv);
+
+    NMessages::TExecOptions ProtoExecOptions;
+    ProtoExecOptions = NCli::TConverter::ConvertExecOptions(settings.ExecOptions, ProtoExecOptions);
+    auto protoText = ProtoExecOptions.DebugString();
+
+    NMessages::TExecOptions ExpectedProtoExecOptions;
+    nlohmann::json resultJson;
+    std::vector<string> CodeFile, ScriptCode;
+    CodeFile = {input_2, input_2};
+    ScriptCode = {input_3, input_3};
+    resultJson["network"] = true;
+    resultJson["copy_file"] = CodeFile;
+    resultJson["script_code"] = ScriptCode;
+    ExpectedProtoExecOptions.set_exec_file(resultJson.dump());
+    auto expectedText = ExpectedProtoExecOptions.DebugString();
+
+    NOs::RemoveFile(ExecFile);
+    NOs::RemoveFile(CopyFile_1);
+    NOs::RemoveFile(CopyFile_2);
+    NOs::RemoveFile(ScriptFile_1);
+    NOs::RemoveFile(ScriptFile_2);
+
+    ASSERT_EQ(protoText, expectedText);
+}
+
 
 TEST(CliUt, GetProtoCommandAttach) {
     NCli::TMainSettings settings;

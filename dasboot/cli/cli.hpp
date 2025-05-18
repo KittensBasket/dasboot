@@ -4,7 +4,8 @@
 #include <iostream>
 #include <optional>
 #include <unordered_map>
-
+#include <nlohmann/json.hpp>
+#include <dasboot/cru/os.hpp>
 #include <dasboot/controller/controller.hpp>
 #include <messages.pb.h>
 
@@ -48,6 +49,7 @@ namespace NCli {
     struct TExecOptions {
         std::optional<string> Name;
         std::optional<string> Id;
+        std::optional<string> ExecFile;
         bool Detach = false;
     };
     
@@ -72,7 +74,7 @@ namespace NCli {
     class TParser final {
     private:
         CLI::App App;
-        std::unordered_map<std::string, CLI::App*> Commands;
+        std::unordered_map<string, CLI::App*> Commands;
 
         static string BuildFullName(const string& shortName, const string& longName);
 
@@ -97,6 +99,8 @@ namespace NCli {
 
     class TConverter {
     public:
+        static string ReadDasbootFile(const string& path);
+        static string ReadExecFile(const string& path);
         static NMessages::TRunOptions ConvertRunOptions(const NCli::TRunOptions& options, NMessages::TRunOptions& protoOptions);
         static NMessages::TBuildOptions ConvertBuildOptions(const NCli::TBuildOptions& options, NMessages::TBuildOptions& protoOptions);
         static NMessages::TStartOptions ConvertStartOptions(const NCli::TStartOptions& options, NMessages::TStartOptions& protoOptions);
@@ -111,8 +115,8 @@ namespace NCli {
     private:
         NController::TController Controller;
     public:
-        TSender(std::string adress);
-        void SendMainSettings(const TMainSettings& mainSettings, const std::string& command);
+        TSender(string adress);
+        void SendMainSettings(const TMainSettings& mainSettings, const string& command);
     };
 
     std::unique_ptr<TParser> MakeDasbootParser(TMainSettings& settings);

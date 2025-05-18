@@ -131,13 +131,15 @@ TEST(CruUt, CheckCopyFiles) {
 }
 
 TEST(CruUt, WriteReadFile) {
-    std::string input = "Hello!!!";
-    std::string file = "hello.txt";
+    std::string input = R"(print("HELLO WORLD!")
+    i = 1
+    print(i))";
+    std::string file = "hello.py";
     auto createStatus = NOs::CreateFile(file, false, 0700);
     EXPECT_EQ(createStatus.Code, NCommon::TStatus::ECode::Success);
     auto writeStatus = NOs::WriteToFile(file, input);
     EXPECT_EQ(writeStatus.Code, NCommon::TStatus::ECode::Success);
-    auto [status, result] = NOs::ReadFile(file);
+    auto [result, status] = NOs::ReadFile(file);
     EXPECT_EQ(status.Code, NCommon::TStatus::ECode::Success);
     EXPECT_EQ(status.Error, "");
     EXPECT_EQ(result, input);

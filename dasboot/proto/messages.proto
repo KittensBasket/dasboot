@@ -9,7 +9,7 @@ enum ReturnCode {
 
 message TBuildOptions {
     optional string name = 1;
-    optional string pathtodasbootfile = 2;
+    optional string dasboot_file = 2;
 }
 
 message TRunOptions{
@@ -38,7 +38,8 @@ message TRmOptions {
 message TExecOptions {
     optional string name = 1;
     optional string id = 2;
-    optional bool detach = 3;
+    optional string exec_file = 3;
+    optional bool detach = 4;
 }
 
 message TAttachOptions {

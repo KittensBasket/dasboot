@@ -54,21 +54,43 @@ TEST(ControllerUt, CommandRun) {
 }
 
 TEST(ControllerUt, CommandBuild) {
+    std::string DasbootFile = "DasbootFile", ScriptFile = "script.py";
+    NOs::CreateFile(DasbootFile, false, 0700);
+    NOs::CreateFile(ScriptFile, false, 0700);
+
+    std::string input_1 = R"({
+	"network" : true,
+	"script_file" : "script.py"
+})", 
+                input_2 = R"(n = 3
+for i in range(3):
+	print("HELLO!!!"))";
+    NOs::WriteToFile(DasbootFile, input_1);
+    NOs::WriteToFile(ScriptFile, input_2);
+
     NMessages::TBuildOptions ExpectedBuildOptions;
     string ExpectedString;
+    nlohmann::json resultJson;
+    std::vector<string> ScriptCode;
+    ScriptCode.push_back(input_2);
+    resultJson["network"] = true;
+    resultJson["script_code"] = ScriptCode;
     ExpectedBuildOptions.set_name("Container_name");
-    ExpectedBuildOptions.set_pathtodasbootfile("path/to/file");
+    ExpectedBuildOptions.set_dasboot_file(resultJson.dump()); 
     ExpectedBuildOptions.SerializeToString(&ExpectedString);
 
     NCli::TMainSettings settings;
     settings.BuildOptions.Name = "Container_name";
-    settings.BuildOptions.PathToDasbootFile = "path/to/file";
+    settings.BuildOptions.PathToDasbootFile = "DasbootFile";
     string command = "build";
     NCli::TSender Sender("ipc:///tmp/testsocket"); 
     Sender.SendMainSettings(settings, command);
     string ServerMessage = server.GetMessage();
     server.SendMessage();
     
+    NOs::RemoveFile(DasbootFile);
+    NOs::RemoveFile(ScriptFile);
+
     ASSERT_EQ(ServerMessage, ExpectedString);
 }
 
@@ -139,22 +161,51 @@ TEST(ControllerUt, CommandRm) {
 }
 
 TEST(ControllerUt, CommandExec) {
+    std::string ExecFile = "ExecFile", CopyFile = "file.txt", ScriptFile = "script.py";
+    NOs::CreateFile(ExecFile, false, 0700);
+    NOs::CreateFile(CopyFile, false, 0700);
+    NOs::CreateFile(ScriptFile, false, 0700);
+
+    std::string input_1 = R"({
+	"network" : true,
+	"copy_file" : "file.txt",
+	"script_file" : "script.py"
+})", 
+                input_2 = R"(HELLO WORLD)",
+                input_3 = R"(print("HELLO!!!"))";
+    NOs::WriteToFile(ExecFile, input_1);
+    NOs::WriteToFile(CopyFile, input_2);
+    NOs::WriteToFile(ScriptFile, input_3);
+
     NMessages::TExecOptions ExpectedExecOptions;
+    nlohmann::json resultJson;
     string ExpectedString;
+    std::vector<string> CodeFile, ScriptCode;
+    CodeFile.push_back(input_2);
+    ScriptCode.push_back(input_3);
+    resultJson["network"] = true;
+    resultJson["copy_file"] = CodeFile;
+    resultJson["script_code"] = ScriptCode;
     ExpectedExecOptions.set_name("Container_name");
     ExpectedExecOptions.set_id("Container_id");
     ExpectedExecOptions.set_detach(true);
+    ExpectedExecOptions.set_exec_file(resultJson.dump());
     ExpectedExecOptions.SerializeToString(&ExpectedString);
 
     NCli::TMainSettings settings;
     settings.ExecOptions.Name = "Container_name";
     settings.ExecOptions.Id = "Container_id";
     settings.ExecOptions.Detach = true;
+    settings.ExecOptions.ExecFile = ExecFile;
     string command = "exec";
     NCli::TSender Sender("ipc:///tmp/testsocket"); 
     Sender.SendMainSettings(settings, command);
     string ServerMessage = server.GetMessage();
     server.SendMessage();
+
+    NOs::RemoveFile(ExecFile);
+    NOs::RemoveFile(CopyFile);
+    NOs::RemoveFile(ScriptFile);
 
     ASSERT_EQ(ServerMessage, ExpectedString);
 }
