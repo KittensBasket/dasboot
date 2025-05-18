@@ -39,10 +39,9 @@ namespace NOs {
     TStatus Copy(const std::string& source, const std::string& target);
 
     TStatus SetClearEnv();
-    TStatus Exec(const std::string& program, char* const argv[]);
+    TStatus Exec(const std::string& program, const std::vector<std::string>& args = {});
     std::pair<pid_t, TStatus> Clone(const TCloneArgs& args);
     std::pair<pid_t, TStatus> Fork();
-    TStatus RunScript(const std::string& script);
 
     TStatus Mount(const std::string& source, const std::string& target, const std::string& type, uint64_t flags = 0);
     TStatus Unmount(const std::string& putOld);
@@ -55,6 +54,8 @@ namespace NOs {
     TStatus ChangeDirectory(const std::string& path);
     TStatus CreateDirectory(const std::string& path, bool isDeep = false, mode_t mode = 0755);
     TStatus RemoveDirectory(const std::string& path, bool shouldBeEmpty = true);
+
+    TStatus WaitPid(pid_t pid);
 
     pid_t GetCurrentPid();
     uid_t GetCurrentUid();
@@ -72,7 +73,7 @@ namespace NOs {
         void CloseWrite() noexcept;
 
         ssize_t Write(const std::string& s);
-        std::string ReadAll(size_t limit = 65536);
+        std::string ReadAll(size_t limit = 256);
 
         int GetWriteFd() noexcept;
         int GetReadFd() noexcept;
