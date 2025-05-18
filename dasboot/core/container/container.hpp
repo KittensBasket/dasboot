@@ -7,25 +7,26 @@
 namespace NContainer {
     using TStatus = NCommon::TStatus;
 
-    class TRunTimeCreator {
+    class TIsolateProcessCreator {
     public:
         struct TRunTimeInfo {
-            std::string rootfs;
+            std::string RootFsPath;
+            bool NeedNetwork;
         };
 
     private:
-        [[maybe_unused]] const TRunTimeInfo Info;
+        const TRunTimeInfo Info;
 
         // This class customizes a process with *current* pid. So, It is 'self'-preparator.
         // The reason for the existence of this class is that some namespaces are configured only from within the process.
         class TSelfPreparator {
         private:
-            [[maybe_unused]] const TRunTimeInfo& RunTimeInfo; // be careful with reference
+            const TRunTimeInfo& RunTimeInfo; // be careful with reference
 
             TStatus PrepareProcessDie();
-            TStatus PreparePidNamespace();
             TStatus PrepareMountNamespace();
             TStatus PrepareEnvironment();
+            TStatus PreparePidNamespace();
 
         public:
             explicit TSelfPreparator(const TRunTimeInfo& info)
@@ -39,43 +40,60 @@ namespace NContainer {
         // The reason for the existence of this class is that some namespaces are configured only from outside the process.
         class TByPidPreparator {
         private:
-            [[maybe_unused]] const TRunTimeInfo& RunTimeInfo; // be careful with reference
+            const TRunTimeInfo& RunTimeInfo; // be careful with reference
+            pid_t Pid;
+            uid_t Uid;
 
             TStatus PrepareNetworkNamespace();
             TStatus PrepareUserNamespace();
 
         public:
-            explicit TByPidPreparator(const TRunTimeInfo& info)
+            explicit TByPidPreparator(const TRunTimeInfo& info, uid_t uid, pid_t pid)
                 : RunTimeInfo(info)
+                , Pid(pid)
+                , Uid(uid)
             {}
 
             TStatus Prepare();
         };
 
-        std::pair<pid_t, TStatus> CloneProccess();
+        std::pair<pid_t, TStatus> CloneIsolatedProccess();
 
     public:
         std::pair<pid_t, TStatus> Create();
-        explicit TRunTimeCreator(const TRunTimeInfo& info)
+        explicit TIsolateProcessCreator(const TRunTimeInfo& info)
             : Info(info)
         {}
     };
 
     class TContainer {
     public:
-        enum class EImage {
-            Alpine
+        struct TMetaInfo {
+            std::string RootFsPath;
+            uint64_t id;
         };
 
-        struct TMetaInfo {
-            std::string Path;
-            uint64_t id;
-            EImage Image = EImage::Alpine;
+        struct TBuildInfo {
+            std::string StaticScript = "";
+            bool NeedNetwork = false;
+        };
+
+        struct TExecInfo {
+            std::string DynamicScript = "";
+            bool NeedNetwork = false;
+            bool IsInteractive = false;
+        };
+
+        enum class EState {
+            NotInited,
+            Building,
+            Exited,
+            Running
         };
 
     private:
-        [[maybe_unused]] TMetaInfo MetaInfo;
-        [[maybe_unused]] pid_t RunTimePid;
+        TMetaInfo MetaInfo;
+        EState State = EState::NotInited;
 
     private:
         TContainer(const TContainer&) = delete;
@@ -87,9 +105,11 @@ namespace NContainer {
             : MetaInfo(metaInfo)
         {}
 
-        /* Creates diskEnv */
-        TStatus Build();
-        /* Creates RunTime */
-        std::pair<pid_t, TStatus> Exec();
+        EState GetState() const {
+            return State;
+        }
+
+        TStatus Build(const TBuildInfo& buildInfo);
+        TStatus Exec(const TExecInfo& execInfo);
     };
 } // namespace NContainer

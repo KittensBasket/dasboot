@@ -89,17 +89,23 @@ namespace {
 
         if (!prefix.empty() && !IsDirectoryExists(prefix)) {
             std::string error = MakeString() << "Path '" << prefix << "' doesnt exists";
-            return { TStatus::ECode::Failed, std::move(error) };
+            return {TStatus::ECode::Failed, std::move(error) };
+        }
+
+        if (IsDirectoryExists(path)) {
+            std::string error = MakeString() << "Directory " << path << " already exists";
+            return {TStatus::ECode::Ignored, std::move(error) };
         }
 
         if (mkdir(path.c_str(), mode)) {
-            return { TStatus::ECode::Failed, "MakeDirectory() failed" };
+            std::string error = MakeString() << "CreateDirectory() failed: " << strerror(errno);
+            return {TStatus::ECode::Failed, std::move(error) };
         }
 
-        return { TStatus::ECode::Success };
+        return {TStatus::ECode::Success };
     }
 
-   TStatus CreateFile(const std::string& path, bool isDeep, mode_t mode, int flags) {
+    TStatus CreateFile(const std::string& path, bool isDeep, mode_t mode, int flags) {
         std::string prefix = GetPrefix(path);
         if (isDeep) {
             auto status = PreCreate(prefix, mode);
@@ -155,7 +161,7 @@ namespace {
     TStatus RemoveFile(const std::string& path) {
         if (!IsFileExists(path)) {
             std::string error = MakeString() << "File " << path << " does not exists";
-            return { TStatus::ECode::Failed, std::move(error) };
+            return { TStatus::ECode::Ignored, std::move(error) };
         }
 
         try {
@@ -259,11 +265,24 @@ namespace {
         return { TStatus::ECode::Success };
     }
 
-    TStatus Exec(const std::string& program, char* const argv[]) {
-        int result = execvp(program.c_str(), argv);
+    TStatus Exec(const std::string& program, const std::vector<std::string>& args) {
+        std::cout << "Exec() program: " << program << std::endl;
+
+        std::vector<char*> argv;
+        argv.reserve(args.size() + 2);
+        argv.push_back(const_cast<char*>(program.c_str()));
+        for (auto &s : args) {
+            argv.push_back(const_cast<char*>(s.c_str()));
+        }
+        argv.push_back(nullptr);
+
+        int result = execvp(program.c_str(), argv.data());
+
+        std::cout << "Exec() failed: " << strerror(errno) << std::endl;
 
         if (result == -1) {
-            return { TStatus::ECode::Failed, "Exec() failed" };
+            std::string error = MakeString() << "Exec() failed: " << strerror(errno);
+            return { TStatus::ECode::Failed, std::move(error) };
         }
 
         return { TStatus::ECode::Success };
@@ -282,7 +301,8 @@ namespace {
         auto result = syscall(SYS_clone3, &args, sizeof(args));
 
         if (result == -1) {
-            return { -1, { TStatus::ECode::Failed, "Clone() failed" }};
+            std::string error = MakeString() << "Clone() failed: " << strerror(errno);
+            return { -1, { TStatus::ECode::Failed, error }};
         }
 
         return { result, { TStatus::ECode::Success }};
@@ -298,7 +318,8 @@ namespace {
 
     TStatus Mount(const std::string& source, const std::string& target, const std::string& type, uint64_t flags) {
         if (mount(source.c_str(), target.c_str(), type.c_str(), flags, nullptr)) {
-            return { TStatus::ECode::Failed, "Mount() failed" };
+            std::string error = MakeString() << "Mount() failed: " << strerror(errno);
+            return { TStatus::ECode::Failed, std::move(error) };
         }
 
         return { TStatus::ECode::Success };
@@ -326,6 +347,33 @@ namespace {
         }
 
         return { TStatus::ECode::Success };
+    }
+
+    TStatus WaitPid(pid_t pid) {
+        int statusWait;
+        waitpid(pid, &statusWait, 0);
+
+        if (WIFEXITED(statusWait)) {
+            return { TStatus::ECode::Success };
+        }
+
+        if (WIFSIGNALED(statusWait)) {
+            return { TStatus::ECode::Failed, "Child process terminated by signal" };
+        }
+
+        if (WIFSTOPPED(statusWait)) {
+            return { TStatus::ECode::Failed, "Child process stopped" };
+        }
+
+        if (WIFCONTINUED(statusWait)) {
+            return { TStatus::ECode::Failed, "Child process continued" };
+        }
+
+        if (WIFEXITED(statusWait)) {
+            return { TStatus::ECode::Failed, "Child process exited" };
+        }
+
+        return { TStatus::ECode::Failed, "Unknown child process status" };
     }
 
 // <TPipe>

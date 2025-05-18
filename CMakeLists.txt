@@ -122,6 +122,7 @@ function(apply_compile_flags target)
             -Wsign-conversion
             -Wsign-promo
             -Wzero-as-null-pointer-constant
+            -Wnonnull
             
             -O3
             #-ffast-math - could not be used here, because json headers include uses of INF
