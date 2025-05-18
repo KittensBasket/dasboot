@@ -5,15 +5,21 @@
 #include <unordered_map>
 #include <zmq.hpp>
 
+class TDaemonTest;
+
 namespace NDaemon
 {
 
 class TDaemon final
 {
   public:
-	TDaemon();
+	friend class ::TDaemonTest;	
+
+	explicit TDaemon(const std::string& address);
+	explicit TDaemon(const char* address);
 	~TDaemon();
 
+	TDaemon() = delete;
 	TDaemon(const TDaemon &daemon) = delete;
 	TDaemon(TDaemon &&daemon) = delete;
 	TDaemon &operator=(const TDaemon &daemon) = delete;
@@ -22,6 +28,11 @@ class TDaemon final
 	void Run();
 
   private:
+	NMessages::TResult GetAndParseRequest();
+	void SendResponse(const NMessages::TResult& response);
+
+	void Stop();
+
 	NMessages::TResult DoBuild(const NMessages::TBuildOptions& options);
 	NMessages::TResult DoRun(const NMessages::TRunOptions& options);
 	NMessages::TResult DoStart(const NMessages::TStartOptions& options);
@@ -33,6 +44,7 @@ class TDaemon final
 
 	zmq::context_t Ctx;
 	zmq::socket_t Sock;
+	std::string SocketAddress;
 
 	// uint64_t NextId = 0;
 	std::unordered_map<uint64_t, NContainer::TContainer> Containers;

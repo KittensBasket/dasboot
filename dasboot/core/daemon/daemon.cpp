@@ -12,70 +12,97 @@
 namespace NDaemon
 {
 
-TDaemon::TDaemon()
+TDaemon::TDaemon(const std::string& address) : SocketAddress(address)
 {
 	Sock = zmq::socket_t(Ctx, zmq::socket_type::rep);
-	Sock.bind("ipc://" DASBOOTD_SOCK);
+	Sock.bind(std::string("ipc://") + SocketAddress);
+}
+
+TDaemon::TDaemon(const char* address) : SocketAddress(address)
+{
+	Sock = zmq::socket_t(Ctx, zmq::socket_type::rep);
+	Sock.bind(std::string("ipc://") + SocketAddress);
 }
 
 TDaemon::~TDaemon()
 {
 	Sock.close();
 	Ctx.close();
+
+	NOs::RemoveFile(SocketAddress);
 }
 
+NMessages::TResult TDaemon::GetAndParseRequest()
+{
+	zmq::message_t request;
+	NMessages::TResult result;
+
+	auto res = Sock.recv(request, zmq::recv_flags::none);
+	if(!res.has_value())
+	{
+		throw "Got EAGAIN, exiting";
+	}
+
+	if(request.to_string() == "STOP")
+	{
+		Stop();
+	}
+
+	NMessages::TOptionsWrapper wrapper;
+	wrapper.ParseFromString(request.to_string());
+
+	switch(wrapper.option_case())
+	{
+		case NMessages::TOptionsWrapper::OptionCase::kBuildOptions:
+			result = DoBuild(wrapper.buildoptions());
+			break;
+		case NMessages::TOptionsWrapper::OptionCase::kRunOptions:
+			result = DoRun(wrapper.runoptions());
+			break;
+		case NMessages::TOptionsWrapper::OptionCase::kStartOptions:
+			result = DoStart(wrapper.startoptions());
+			break;
+		case NMessages::TOptionsWrapper::OptionCase::kStopOptions:
+			result = DoStop(wrapper.stopoptions());
+			break;
+		case NMessages::TOptionsWrapper::OptionCase::kPsOptions:
+			result = DoPs(wrapper.psoptions());
+			break;
+		case NMessages::TOptionsWrapper::OptionCase::kRmOptions:
+			result = DoRm(wrapper.rmoptions());
+			break;
+		case NMessages::TOptionsWrapper::OptionCase::kExecOptions:
+			result = DoExec(wrapper.execoptions());
+			break;
+		case NMessages::TOptionsWrapper::OptionCase::kAttachOptions:
+			result = DoAttach(wrapper.attachoptions());
+			break;
+	
+		default:
+			result.set_code(NMessages::ReturnCode::ERROR);
+			result.set_text("Unknown request");
+	}
+
+	return result;
+}
+
+void TDaemon::SendResponse(const NMessages::TResult& response)
+{
+	zmq::message_t responseString(response.SerializeAsString());
+	Sock.send(responseString, zmq::send_flags::none);
+}
 
 void TDaemon::Run()
 {
 	while(true)
 	{
-		zmq::message_t request;
-		NMessages::TResult result;
-
-		auto res = Sock.recv(request, zmq::recv_flags::none);
-		if(!res.has_value())
-		{
-			throw "Got EAGAIN, exiting";
-		}
-
-		NMessages::TOptionsWrapper wrapper;
-		wrapper.ParseFromString(request.to_string());
-
-		switch(wrapper.option_case())
-		{
-			case NMessages::TOptionsWrapper::OptionCase::kBuildOptions:
-				result = DoBuild(wrapper.buildoptions());
-				break;
-			case NMessages::TOptionsWrapper::OptionCase::kRunOptions:
-				result = DoRun(wrapper.runoptions());
-				break;
-			case NMessages::TOptionsWrapper::OptionCase::kStartOptions:
-				result = DoStart(wrapper.startoptions());
-				break;
-			case NMessages::TOptionsWrapper::OptionCase::kStopOptions:
-				result = DoStop(wrapper.stopoptions());
-				break;
-			case NMessages::TOptionsWrapper::OptionCase::kPsOptions:
-				result = DoPs(wrapper.psoptions());
-				break;
-			case NMessages::TOptionsWrapper::OptionCase::kRmOptions:
-				result = DoRm(wrapper.rmoptions());
-				break;
-			case NMessages::TOptionsWrapper::OptionCase::kExecOptions:
-				result = DoExec(wrapper.execoptions());
-				break;
-			case NMessages::TOptionsWrapper::OptionCase::kAttachOptions:
-				result = DoAttach(wrapper.attachoptions());
-				break;
-		
-			default:
-				result.set_code(NMessages::ReturnCode::ERROR);
-				result.set_text("Unknown request");
-		}
-
-		zmq::message_t response(result.SerializeAsString());
-		Sock.send(response, zmq::send_flags::none);
+		SendResponse(GetAndParseRequest());
 	}
+}
+
+void TDaemon::Stop()
+{
+	exit(0);
 }
 
 NMessages::TResult TDaemon::DoBuild(const NMessages::TBuildOptions& options)

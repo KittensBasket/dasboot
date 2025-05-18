@@ -13,7 +13,7 @@ int main()
 
 	try
 	{
-		NDaemon::TDaemon daemon;
+		NDaemon::TDaemon daemon(DASBOOTD_SOCK);
 		daemon.Run();
 	}
 	catch(...)
