@@ -8,5 +8,5 @@ target_link_libraries(
     PUBLIC
     cru
     container
+    nlohmann_json
 )
-
