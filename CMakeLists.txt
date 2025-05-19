@@ -97,6 +97,38 @@ FetchContent_MakeAvailable(json)
 include_directories(${json_SOURCE_DIR}/include)
 # </nlohmann_json>
 
+# <libcurl>
+set(BUILD_CURL_EXE OFF CACHE BOOL "" FORCE)
+set(BUILD_SHARED_LIBS OFF CACHE BOOL "" FORCE)
+set(BUILD_TESTING OFF CACHE BOOL "" FORCE)
+
+FetchContent_Declare(
+    curl
+    GIT_REPOSITORY https://github.com/curl/curl.git
+    GIT_TAG        curl-8_7_1
+)
+
+FetchContent_MakeAvailable(curl)
+
+include_directories(${curl_SOURCE_DIR}/include)
+# <libcurl>
+
+# <libarchive>
+set(ENABLE_TEST OFF CACHE BOOL "" FORCE)
+set(ENABLE_CPIO OFF CACHE BOOL "" FORCE)
+set(ENABLE_CAT OFF CACHE BOOL "" FORCE)
+
+FetchContent_Declare(
+    libarchive
+    GIT_REPOSITORY https://github.com/libarchive/libarchive.git
+    GIT_TAG        v3.7.2
+)
+
+FetchContent_MakeAvailable(libarchive)
+
+include_directories(${libarchive_SOURCE_DIR}/libarchive)
+# </libarchive>
+
 # ========================================== End install dependencies ==========================================
 
 # Start flags
