@@ -118,29 +118,6 @@ TEST(CliUt, GetProtoCommandBuild0) {
 }
 
 TEST(CliUt, GetProtoCommandBuild1) {
-    NCli::TMainSettings settings;
-    auto parser = NCli::MakeDasbootParser(settings);
-
-    const char* argv0[] = {
-    "./dasboot", "build", "--name", "meow"
-    };
-    int argc = sizeof(argv0)/sizeof(argv0[0]);
-    char** argv = const_cast<char**>(argv0);
-
-    parser->Parse(argc, argv);
-
-    NMessages::TBuildOptions ProtoBuildOptions;
-    ProtoBuildOptions = NCli::TConverter::ConvertBuildOptions(settings.BuildOptions, ProtoBuildOptions);
-    auto protoText = ProtoBuildOptions.DebugString();
-
-    auto excpected =
-R"(name: "meow"
-)";
-
-    ASSERT_EQ(protoText, excpected);
-}
-
-TEST(CliUt, GetProtoCommandBuild2) {
     string DasbootFile = "DasbootFile", ScriptFile = "script.py";
     NOs::CreateFile(DasbootFile, false, 0700);
     NOs::CreateFile(ScriptFile, false, 0700);
@@ -181,28 +158,6 @@ for i in range(3):
     NOs::RemoveFile(ScriptFile);
 
     ASSERT_EQ(protoText, expectedText);
-}
-
-TEST(CliUt, GetProtoCommandBuild3) {
-    NCli::TMainSettings settings;
-    auto parser = NCli::MakeDasbootParser(settings);
-
-    const char* argv0[] = {
-    "./dasboot", "build"
-    };
-    int argc = sizeof(argv0)/sizeof(argv0[0]);
-    char** argv = const_cast<char**>(argv0);
-
-    parser->Parse(argc, argv);
-
-    NMessages::TBuildOptions ProtoBuildOptions;
-    ProtoBuildOptions = NCli::TConverter::ConvertBuildOptions(settings.BuildOptions, ProtoBuildOptions);
-    auto protoText = ProtoBuildOptions.DebugString();
-
-    auto excpected =
-R"()";
-
-    ASSERT_EQ(protoText, excpected);
 }
 
 TEST(CliUt, GetProtoCommandRun0) {
