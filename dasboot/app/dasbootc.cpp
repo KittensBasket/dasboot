@@ -16,9 +16,17 @@ int main(int argc, char* argv[]) {
         std::cout << parser->GetHelp();
         return 0;
     }
+
+    try {
+
     
     NCli::TSender Sender("ipc://" DASBOOTD_SOCK); 
     Sender.SendMainSettings(settings, command);
+    }
+    catch (...)
+    {
+        std::cout << "Oh no";
+    }
     
     return 0;
 }

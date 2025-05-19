@@ -10,8 +10,19 @@ namespace NController {
     }
 
     void TController::Build(const NMessages::TBuildOptions& BuildOptions) {
+        NMessages::TBuildOptions* hoax = new NMessages::TBuildOptions;
+        hoax->set_name(BuildOptions.name());
+        hoax->set_dasboot_file(BuildOptions.dasboot_file());
+
+        NMessages::TOptionsWrapper wrapper;
+        wrapper.set_allocated_buildoptions(hoax);
+
         std::string message;
-        BuildOptions.SerializeToString(&message);
+        wrapper.SerializeToString(&message);
+
+        std::cout << BuildOptions.dasboot_file() << std::endl;
+        std::cout << message << std::endl;
+
         StartConnection();
         WriteToDaemon(message);
     }
@@ -31,15 +42,31 @@ namespace NController {
     }
 
     void TController::Ps(const NMessages::TPsOptions& PsOptions) {
+        NMessages::TPsOptions* hoax = new NMessages::TPsOptions;
+        hoax->set_show_all(PsOptions.show_all());
+
+        NMessages::TOptionsWrapper wrapper;
+        wrapper.set_allocated_psoptions(hoax);
+
         std::string message;
-        PsOptions.SerializeToString(&message);
+        wrapper.SerializeToString(&message);
         StartConnection();
         WriteToDaemon(message);
     }
 
     void TController::Exec(const NMessages::TExecOptions& ExecOptions) {
+        NMessages::TExecOptions* hoax = new NMessages::TExecOptions;
+        hoax->set_name(ExecOptions.name());
+        hoax->set_id(ExecOptions.id());
+        hoax->set_exec_file(ExecOptions.exec_file());
+        hoax->set_is_interactive(ExecOptions.is_interactive());
+        hoax->set_detach(ExecOptions.detach());
+
+        NMessages::TOptionsWrapper wrapper;
+        wrapper.set_allocated_execoptions(hoax);
+
         std::string message;
-        ExecOptions.SerializeToString(&message);
+        wrapper.SerializeToString(&message);
         StartConnection();
         WriteToDaemon(message);
     }

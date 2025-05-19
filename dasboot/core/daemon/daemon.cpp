@@ -86,6 +86,9 @@ NMessages::TResult TDaemon::GetAndParseRequest()
 			result.set_text("Unknown request");
 	}
 
+	std::cout << wrapper.buildoptions().dasboot_file() << std::endl;
+	std::cout << wrapper.SerializeAsString() << " - " << result.SerializeAsString() << std::endl;
+
 	return result;
 }
 
