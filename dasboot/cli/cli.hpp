@@ -50,6 +50,7 @@ namespace NCli {
         std::optional<string> Name;
         std::optional<string> Id;
         std::optional<string> ExecFile;
+        bool IsInteractive = false;
         bool Detach = false;
     };
     
@@ -100,7 +101,7 @@ namespace NCli {
     class TConverter {
     public:
         static string ReadDasbootFile(const string& path);
-        static string ReadExecFile(const string& path);
+        static string ReadExecFile(const string& path, const bool& isInteractive);
         static NMessages::TRunOptions ConvertRunOptions(const NCli::TRunOptions& options, NMessages::TRunOptions& protoOptions);
         static NMessages::TBuildOptions ConvertBuildOptions(const NCli::TBuildOptions& options, NMessages::TBuildOptions& protoOptions);
         static NMessages::TStartOptions ConvertStartOptions(const NCli::TStartOptions& options, NMessages::TStartOptions& protoOptions);

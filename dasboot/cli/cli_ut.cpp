@@ -105,10 +105,8 @@ TEST(CliUt, GetProtoCommandBuild0) {
 
     NMessages::TBuildOptions ExpectedProtoBuildOptions;
     nlohmann::json resultJson;
-    std::vector<string> ScriptCode;
-    ScriptCode.push_back(input_2);
     resultJson["network"] = false;
-    resultJson["script_code"] = ScriptCode;
+    resultJson["script_code"] = input_2;
     ExpectedProtoBuildOptions.set_name("meow");
     ExpectedProtoBuildOptions.set_dasboot_file(resultJson.dump());
     auto expectedText = ExpectedProtoBuildOptions.DebugString();
@@ -174,10 +172,8 @@ for i in range(3):
 
     NMessages::TBuildOptions ExpectedProtoBuildOptions;
     nlohmann::json resultJson;
-    std::vector<string> ScriptCode;
-    ScriptCode.push_back(input_2);
     resultJson["network"] = true;
-    resultJson["script_code"] = ScriptCode;
+    resultJson["script_code"] = input_2;
     ExpectedProtoBuildOptions.set_dasboot_file(resultJson.dump());
     auto expectedText = ExpectedProtoBuildOptions.DebugString();
 
@@ -188,57 +184,6 @@ for i in range(3):
 }
 
 TEST(CliUt, GetProtoCommandBuild3) {
-    string DasbootFile = "DasbootFile", 
-                ScriptFile_1 = "script_1.py",
-                ScriptFile_2 = "script_2.py";
-    NOs::CreateFile(DasbootFile, false, 0700);
-    NOs::CreateFile(ScriptFile_1, false, 0700);
-    NOs::CreateFile(ScriptFile_2, false, 0700);
-
-    string input_1 = R"({
-	"network" : true,
-	"script_file" : ["script_1.py", "script_2.py"]
-})", 
-                input_2 = R"(n = 3
-for i in range(3):
-	print("HELLO!!!"))";
-    NOs::WriteToFile(DasbootFile, input_1);
-    NOs::WriteToFile(ScriptFile_1, input_2);
-    NOs::WriteToFile(ScriptFile_2, input_2);
-
-    NCli::TMainSettings settings;
-    auto parser = NCli::MakeDasbootParser(settings);
-
-    const char* argv0[] = {
-    "./dasboot", "build", "--file", "DasbootFile"
-    };
-    int argc = sizeof(argv0)/sizeof(argv0[0]);
-    char** argv = const_cast<char**>(argv0);
-
-    parser->Parse(argc, argv);
-
-    NMessages::TBuildOptions ProtoBuildOptions;
-    ProtoBuildOptions = NCli::TConverter::ConvertBuildOptions(settings.BuildOptions, ProtoBuildOptions);
-    auto protoText = ProtoBuildOptions.DebugString();
-
-    NMessages::TBuildOptions ExpectedProtoBuildOptions;
-    nlohmann::json resultJson;
-    std::vector<string> ScriptCode;
-    ScriptCode = {input_2, input_2};
-    resultJson["network"] = true;
-    resultJson["script_code"] = ScriptCode;
-    ExpectedProtoBuildOptions.set_dasboot_file(resultJson.dump());
-    auto expectedText = ExpectedProtoBuildOptions.DebugString();
-
-    NOs::RemoveFile(DasbootFile);
-    NOs::RemoveFile(ScriptFile_1);
-    NOs::RemoveFile(ScriptFile_2);
-
-    ASSERT_EQ(protoText, expectedText);
-}
-
-
-TEST(CliUt, GetProtoCommandBuild4) {
     NCli::TMainSettings settings;
     auto parser = NCli::MakeDasbootParser(settings);
 
@@ -631,7 +576,7 @@ TEST(CliUt, GetProtoCommandExec0) {
     auto parser = NCli::MakeDasbootParser(settings);
 
     const char* argv0[] = {
-    "./dasboot", "exec", "-n", "meow", "-i", "12345", "-d", "1"
+    "./dasboot", "exec", "-n", "meow", "-i", "12345", "-d", "1", "--interactive", "1"
     };
     int argc = sizeof(argv0)/sizeof(argv0[0]);
     char** argv = const_cast<char**>(argv0);
@@ -645,6 +590,7 @@ TEST(CliUt, GetProtoCommandExec0) {
     auto excpected =
 R"(name: "meow"
 id: "12345"
+is_interactive: true
 detach: true
 )";
 
@@ -656,7 +602,7 @@ TEST(CliUt, GetProtoCommandExec1) {
     auto parser = NCli::MakeDasbootParser(settings);
 
     const char* argv0[] = {
-    "./dasboot", "exec", "--detach", "0"
+    "./dasboot", "exec", "--detach", "0", "--interactive", "1"
     };
     int argc = sizeof(argv0)/sizeof(argv0[0]);
     char** argv = const_cast<char**>(argv0);
@@ -668,7 +614,8 @@ TEST(CliUt, GetProtoCommandExec1) {
     auto protoText = ProtoExecOptions.DebugString();
 
     auto excpected =
-R"()";
+R"(is_interactive: true
+)";
 
     ASSERT_EQ(protoText, excpected);
 }
@@ -708,12 +655,9 @@ TEST(CliUt, GetProtoCommandExec2) {
 
     NMessages::TExecOptions ExpectedProtoExecOptions;
     nlohmann::json resultJson;
-    std::vector<string> CodeFile, ScriptCode;
-    CodeFile.push_back(input_2);
-    ScriptCode.push_back(input_3);
     resultJson["network"] = true;
-    resultJson["copy_file"] = CodeFile;
-    resultJson["script_code"] = ScriptCode;
+    resultJson["copy_file"] = input_2;
+    resultJson["script_code"] = input_3;
     ExpectedProtoExecOptions.set_exec_file(resultJson.dump());
     auto expectedText = ExpectedProtoExecOptions.DebugString();
 
@@ -727,17 +671,16 @@ TEST(CliUt, GetProtoCommandExec2) {
 TEST(CliUt, GetProtoCommandExec3) {
     string ExecFile = "ExecFile", 
                 CopyFile_1 = "file_1.txt", CopyFile_2 = "file_2.txt", 
-                ScriptFile_1 = "script_1.py", ScriptFile_2 = "script_2.py";
+                ScriptFile_1 = "script_1.py";
     NOs::CreateFile(ExecFile, false, 0700);
     NOs::CreateFile(CopyFile_1, false, 0700);
     NOs::CreateFile(CopyFile_2, false, 0700);
     NOs::CreateFile(ScriptFile_1, false, 0700);
-    NOs::CreateFile(ScriptFile_2, false, 0700);
 
     string input_1 = R"({
 	"network" : true,
 	"copy_file" : ["file_1.txt", "file_2.txt"],
-	"script_file" : ["script_1.py", "script_2.py"]
+	"script_file" : "script_1.py"
 })", 
                 input_2 = R"(HELLO WORLD)",
                 input_3 = R"(print("HELLO!!!"))";
@@ -745,7 +688,6 @@ TEST(CliUt, GetProtoCommandExec3) {
     NOs::WriteToFile(CopyFile_1, input_2);
     NOs::WriteToFile(CopyFile_2, input_2);
     NOs::WriteToFile(ScriptFile_1, input_3);
-    NOs::WriteToFile(ScriptFile_2, input_3);
 
 
     NCli::TMainSettings settings;
@@ -765,12 +707,11 @@ TEST(CliUt, GetProtoCommandExec3) {
 
     NMessages::TExecOptions ExpectedProtoExecOptions;
     nlohmann::json resultJson;
-    std::vector<string> CodeFile, ScriptCode;
+    std::vector<string> CodeFile;
     CodeFile = {input_2, input_2};
-    ScriptCode = {input_3, input_3};
     resultJson["network"] = true;
     resultJson["copy_file"] = CodeFile;
-    resultJson["script_code"] = ScriptCode;
+    resultJson["script_code"] = input_3;
     ExpectedProtoExecOptions.set_exec_file(resultJson.dump());
     auto expectedText = ExpectedProtoExecOptions.DebugString();
 
@@ -778,7 +719,6 @@ TEST(CliUt, GetProtoCommandExec3) {
     NOs::RemoveFile(CopyFile_1);
     NOs::RemoveFile(CopyFile_2);
     NOs::RemoveFile(ScriptFile_1);
-    NOs::RemoveFile(ScriptFile_2);
 
     ASSERT_EQ(protoText, expectedText);
 }

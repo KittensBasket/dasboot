@@ -69,6 +69,7 @@ namespace NCli {
         static const string DetachFlagDescription = "Detached mode: run command in the background";
         static const string NoStdinFlagDescription = "Do not attach STDIN";
         static const string ExecFileDescription = "Path to ExecFile";
+        static const string InteractiveContainerDescription = "Run container in interactive mode"; //maybe edit
 
         // Command descriptions
         static const string VersionDescription = "Print version information and quit";
@@ -113,6 +114,7 @@ namespace NCli {
         AddGlobalCommand("exec", ExecDescription);
         AddLocalOption("exec", "-n", "--name", mainSettings.ExecOptions.Name, ContainerNameDescription);
         AddLocalOption("exec", "-i", "--id", mainSettings.ExecOptions.Id, ContainerIdDescription);
+        AddLocalFlag("exec", "", "--interactive", mainSettings.ExecOptions.IsInteractive, InteractiveContainerDescription);
         AddLocalOption("exec", "-f", "--file", mainSettings.ExecOptions.ExecFile, ExecFileDescription);
         AddLocalFlag("exec", "-d", "--detach", mainSettings.ExecOptions.Detach, DetachFlagDescription);
 
@@ -201,7 +203,7 @@ namespace NCli {
     string TConverter::ReadDasbootFile(const string& path) {
         std::ifstream DasbootFile(path);
         nlohmann::json jsonDasbootFile, resultJson;
-        std::vector<string> ScriptsCode;
+        std::vector<string> CopyFile;
 
         try {
             jsonDasbootFile = nlohmann::json::parse(DasbootFile);
@@ -211,47 +213,48 @@ namespace NCli {
             throw std::runtime_error("Error reading JSON: " + string(e.what()));
         }
 
-        if (!jsonDasbootFile.contains("network") && jsonDasbootFile["network"].is_null()) {
-            throw std::runtime_error("Field 'network' is missing or null");
-        } else if (!jsonDasbootFile["network"].is_boolean()) {
-            throw std::runtime_error("Field 'network' must be boolean (true or false)");
+        if (jsonDasbootFile.contains("network")) {
+            if (!jsonDasbootFile["network"].is_boolean()) {
+                throw std::runtime_error("Field 'network' must be boolean (true or false)");
+            }
+            else {
+                resultJson["network"] = jsonDasbootFile["network"];
+            }
         }
-
-        resultJson["network"] = jsonDasbootFile["network"];
 
         if (jsonDasbootFile.contains("script_file") && !jsonDasbootFile["script_file"].is_null()) {
             if (jsonDasbootFile["script_file"].is_string()) {
                 string result = GetReadFileResult(jsonDasbootFile["script_file"]);
-                ScriptsCode.push_back(result);
+                resultJson["script_code"] = result;
             } 
-            else if (jsonDasbootFile["script_file"].is_array()) {
-                for (const auto& scriptPath : jsonDasbootFile["script_file"]) {
-                    if (scriptPath.is_string()) {
-                        string result = GetReadFileResult(scriptPath);
-                        ScriptsCode.push_back(result);
-                    } else {
-                        throw std::runtime_error("Error: non-string element in script_file array");
-                    }
-                }
-            } 
-            else {
-                throw std::runtime_error("Field 'script_file' must be either string or array");
-            }
-        } else {
-            throw std::runtime_error("Field 'script_file' is missing or null");
         }
 
-
-        resultJson["script_code"] = ScriptsCode;
+        if (jsonDasbootFile.contains("copy_file") && !jsonDasbootFile["copy_file"].is_null()) {
+            if (jsonDasbootFile["copy_file"].is_string()) {
+                string result = GetReadFileResult(jsonDasbootFile["copy_file"]);
+                CopyFile.push_back(result);
+            } 
+            else if (jsonDasbootFile["copy_file"].is_array()) {
+                for (const auto& CodePath : jsonDasbootFile["copy_file"]) {
+                    if (CodePath.is_string()) {
+                        string result = GetReadFileResult(CodePath);
+                        CopyFile.push_back(result);
+                    } else {
+                        throw std::runtime_error("Error: non-string element in copy_file array");
+                    }
+                }
+            }
+            resultJson["copy_file"] = CopyFile;
+        }
 
         return resultJson.dump();
     }
 
-    string TConverter::ReadExecFile(const string& path) {
+    string TConverter::ReadExecFile(const string& path, const bool& isInteractive) {
         std::ifstream ExecFile(path);
         nlohmann::json jsonExecFile, resultJson;
         string pathToScript, pathToCopyFile;
-        std::vector<string> CopyFile, ScriptsCode;
+        std::vector<string> CopyFile;
         
         try {
             jsonExecFile = nlohmann::json::parse(ExecFile);
@@ -261,16 +264,19 @@ namespace NCli {
             throw std::runtime_error("Error reading JSON: " + string(e.what()));
         }
 
-        if (!jsonExecFile.contains("network") && jsonExecFile["network"].is_null()) {
-            throw std::runtime_error("Field 'network' is missing or null");
-        } else if (!jsonExecFile["network"].is_boolean()) {
-            throw std::runtime_error("Field 'network' must be boolean (true or false)");
+        if (jsonExecFile.contains("network")) {
+            if (!jsonExecFile["network"].is_boolean()) {
+                throw std::runtime_error("Field 'network' must be boolean (true or false)");
+            }
+            else {
+                resultJson["network"] = jsonExecFile["network"];
+            }
         }
 
-        if (jsonExecFile.contains("copy_file") && !jsonExecFile["copy_file"].is_null()) {
+        if (jsonExecFile.contains("copy_file")) {
             if (jsonExecFile["copy_file"].is_string()) {
                 string result = GetReadFileResult(jsonExecFile["copy_file"]);
-                CopyFile.push_back(result);
+                resultJson["copy_file"] = result;
             } 
             else if (jsonExecFile["copy_file"].is_array()) {
                 for (const auto& CodePath : jsonExecFile["copy_file"]) {
@@ -281,36 +287,21 @@ namespace NCli {
                         throw std::runtime_error("Error: non-string element in copy_file array");
                     }
                 }
-            } 
-        } else {
-            throw std::runtime_error("Field 'copy_file' is missing or null");
+                resultJson["copy_file"] = CopyFile;
+            }
         }
 
-        if (jsonExecFile.contains("script_file") && !jsonExecFile["script_file"].is_null()) {
-            if (jsonExecFile["script_file"].is_string()) {
+        if (jsonExecFile.contains("script_file")) {
+            if (!isInteractive) {
                 string result = GetReadFileResult(jsonExecFile["script_file"]);
-                ScriptsCode.push_back(result);
-            } 
-            else if (jsonExecFile["script_file"].is_array()) {
-                for (const auto& scriptPath : jsonExecFile["script_file"]) {
-                    if (scriptPath.is_string()) {
-                        string result = GetReadFileResult(scriptPath);
-                        ScriptsCode.push_back(result);
-                    } else {
-                        throw std::runtime_error("Error: non-string element in script_file array");
-                    }
-                }
+                resultJson["script_code"] = result;
             } 
             else {
-                throw std::runtime_error("Field 'script_file' must be either string or array");
+                throw std::runtime_error("When --interactive flag is used, 'script_file' field must not be present");
             }
-        } else {
-            throw std::runtime_error("Field 'script_file' is missing or null");
+        } else if (!jsonExecFile.contains("script_file") && !isInteractive) {
+            throw std::runtime_error("There must be 'script_file' field");
         }
-
-        resultJson["network"] = jsonExecFile["network"];
-        resultJson["copy_file"] = CopyFile;
-        resultJson["script_code"] = ScriptsCode;
 
         return resultJson.dump();
     }
@@ -324,7 +315,9 @@ namespace NCli {
             string DasbootFile = ReadDasbootFile(options.PathToDasbootFile.value());
             protoOptions.set_dasboot_file(DasbootFile);
         }
-
+        else {
+            throw std::runtime_error("Path to DasbootFile must be specified");
+        }
         return protoOptions;
     }
 
@@ -389,10 +382,19 @@ namespace NCli {
             protoOptions.set_id(options.Id.value());
         }
 
-        if (options.ExecFile.has_value()) {
-            string result = ReadExecFile(options.ExecFile.value());
+        if (options.IsInteractive) {
+            if (options.ExecFile.has_value()) {
+                string result = ReadExecFile(options.ExecFile.value(), true);
+                protoOptions.set_exec_file(result);
+            }
+            protoOptions.set_is_interactive(options.IsInteractive);
+        }
+        else if (options.ExecFile.has_value()) {
+            string result = ReadExecFile(options.ExecFile.value(), false);
             protoOptions.set_exec_file(result);
-
+        }
+        else {
+            throw std::runtime_error("You forgot flag --interactive or ExecFile");
         }
 
         if (options.Detach) {

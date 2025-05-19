@@ -71,10 +71,8 @@ for i in range(3):
     NMessages::TBuildOptions ExpectedBuildOptions;
     string ExpectedString;
     nlohmann::json resultJson;
-    std::vector<string> ScriptCode;
-    ScriptCode.push_back(input_2);
     resultJson["network"] = true;
-    resultJson["script_code"] = ScriptCode;
+    resultJson["script_code"] = input_2;
     ExpectedBuildOptions.set_name("Container_name");
     ExpectedBuildOptions.set_dasboot_file(resultJson.dump()); 
     ExpectedBuildOptions.SerializeToString(&ExpectedString);
@@ -181,11 +179,9 @@ TEST(ControllerUt, CommandExec) {
     nlohmann::json resultJson;
     string ExpectedString;
     std::vector<string> CodeFile, ScriptCode;
-    CodeFile.push_back(input_2);
-    ScriptCode.push_back(input_3);
     resultJson["network"] = true;
-    resultJson["copy_file"] = CodeFile;
-    resultJson["script_code"] = ScriptCode;
+    resultJson["copy_file"] = input_2;
+    resultJson["script_code"] = input_3;
     ExpectedExecOptions.set_name("Container_name");
     ExpectedExecOptions.set_id("Container_id");
     ExpectedExecOptions.set_detach(true);

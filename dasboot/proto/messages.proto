@@ -39,7 +39,8 @@ message TExecOptions {
     optional string name = 1;
     optional string id = 2;
     optional string exec_file = 3;
-    optional bool detach = 4;
+    optional bool is_interactive = 4;
+    optional bool detach = 5;
 }
 
 message TAttachOptions {
