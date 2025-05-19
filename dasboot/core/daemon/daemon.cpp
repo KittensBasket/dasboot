@@ -112,7 +112,9 @@ NMessages::TResult TDaemon::DoBuild(const NMessages::TBuildOptions& options)
 {
 	NMessages::TResult result;
 	coordinator.Build(options);
-	return result;
+	result.set_code(NMessages::ReturnCode::SUCESS);
+	result.set_text("hello");
+    return result;
 }
 
 NMessages::TResult TDaemon::DoRun(const NMessages::TRunOptions &options)
@@ -235,24 +237,12 @@ NMessages::TResult TDaemon::DoStop(const NMessages::TStopOptions &options)
 	return result;
 }
 
-NMessages::TResult TDaemon::DoPs([[maybe_unused]] const NMessages::TPsOptions &options)
+NMessages::TResult TDaemon::DoPs(const NMessages::TPsOptions &options)
 {
 	NMessages::TResult result;
-
-	MakeString text;
-	for(auto& [name, id] : NameToId)
-	{
-		text << name << " - " << id << "\n";
-	}
-
+    auto [ans, status] = coordinator.Ps(options);
 	result.set_code(NMessages::ReturnCode::SUCESS);
-	result.set_text(text);
-
-	if (coordinator.Ps(options).second.Code == NCommon::TStatus::Success) {
-		result.set_code(NMessages::ReturnCode::SUCESS);
-		result.set_text("Ps was done");
-	}
-
+	result.set_text(ans);
 	return result;
 }
 
@@ -297,46 +287,11 @@ NMessages::TResult TDaemon::DoRm(const NMessages::TRmOptions &options)
 
 NMessages::TResult TDaemon::DoExec(const NMessages::TExecOptions & options)
 {
-	NMessages::TResult result;
-
-	if(options.has_id())
-	{
-		if(!Containers.contains(std::stoull(options.id())))
-		{
-			result.set_code(NMessages::ReturnCode::ERROR);
-			result.set_text("No container with such id");
-		}
-		else
-		{
-			result.set_code(NMessages::ReturnCode::ERROR);
-			result.set_text("Not implemented");
-		}
-	}
-	else if(options.has_name())
-	{
-		if(!NameToId.contains(options.name()))
-		{
-			result.set_code(NMessages::ReturnCode::ERROR);
-			result.set_text("No container with such name");
-		}
-		else
-		{
-			result.set_code(NMessages::ReturnCode::ERROR);
-			result.set_text("Not implemented");
-		}
-	}
-	else
-	{
-		result.set_code(NMessages::ReturnCode::ERROR);
-		result.set_text("No name or id given");
-	}	
-
-	if (coordinator.Exec(options).Code == NCommon::TStatus::Success) {
-		result.set_code(NMessages::ReturnCode::SUCESS);
-		result.set_text("Exec was done");
-	}
-
-	return result;
+    NMessages::TResult result;
+    coordinator.Exec(options);
+	result.set_code(NMessages::ReturnCode::SUCESS);
+	result.set_text("hello");
+    return result;
 }
 
 NMessages::TResult TDaemon::DoAttach(const NMessages::TAttachOptions & options)
