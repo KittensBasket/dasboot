@@ -10,6 +10,7 @@ target_link_libraries(coordinator
     container
     CURL::libcurl 
     archive
+    nlohmann_json
 )
 
 # tests:
@@ -24,6 +25,7 @@ target_link_libraries(
     coordinator
     CURL::libcurl
     archive
+    nlohmann_json
 )
 
 gtest_discover_tests(imagemanager_ut)

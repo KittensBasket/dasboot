@@ -1,4 +1,6 @@
 #include "coordinator.hpp"
+#include <chrono>
+#include <thread>
 
 namespace NCoordinator {
 namespace {
@@ -58,27 +60,125 @@ namespace {
         return { result, { TStatus::Success } };
     }
 
+    TStatus TCoordinator::Deserialize(TBuildOptionsDeserialized& opts, const std::string& stringJson) {
+        nlohmann::json jsonValue = nlohmann::json::parse(stringJson);
+
+        if (jsonValue.contains("copy_file")) {
+            opts.CopyFiles = jsonValue["copy_file"].array();
+        }
+
+        if (jsonValue.contains("copy_file_names")) {
+            opts.CopyFilesNames = jsonValue["copy_file_names"].array();
+        }
+
+        if (jsonValue.contains("script_file")) {
+            opts.Script = jsonValue["script_file"];
+        }
+
+        return { TStatus::Success };
+    }
+
     TStatus TCoordinator::Build(const NMessages::TBuildOptions& buildOptions) {
-        {
-            std::string alphinePath = ImagesPath + "alpine";
-            if (!NOs::IsDirectoryExists(alphinePath)) {
-                // ImageManager.Install();
-            }
+        // in the future there will be any type of image
+        std::string alphinePath = ImagesPath + "alpine";
+        if (!NOs::IsDirectoryExists(alphinePath)) {
+            // ImageManager.Install();
         }
 
         std::string name = buildOptions.name();
-        std::string fullPath = MakeString() << ContainersPath << name;
-
-        if (NOs::IsPathExists(fullPath)) {
+        if (Containers.contains(name)) {
             return { TStatus::Failed, MakeString() << "Container with name " << name << " already exists. "};
         }
 
-        // TODO(flown4qqqq)
+        std::string containerPath = MakeString() << ContainersPath << name;
+        if (auto status = NOs::CreateDirectory(containerPath); status.Code != TStatus::Success) {
+            return status;
+        }
 
-        return { TStatus::Failed };
+        TBuildOptionsDeserialized options;
+        std::string serializedJson = buildOptions.dasboot_file();
+        Deserialize(options, serializedJson);
+
+        std::string rootfsPath = MakeString() << containerPath << "/rootfs";
+        NOs::Copy(alphinePath, rootfsPath);
+
+        for (size_t i = 0; i < options.CopyFilesNames.size(); ++i) {
+            const std::string name = options.CopyFilesNames[i];
+            const std::string data = options.CopyFiles[i];
+
+            std::string fullPath = MakeString() << rootfsPath << "/" << name;
+            NOs::CreateFile(fullPath, true, 0755);
+            NOs::WriteToFile(fullPath, data);
+        }
+
+        NContainer::TContainer::TMetaInfo metaBuildInfo;
+        metaBuildInfo.Name = name;
+        metaBuildInfo.RootFsPath = rootfsPath;
+        Containers[name] = std::make_unique<NContainer::TContainer>(metaBuildInfo);
+
+        NContainer::TContainer::TBuildInfo buildInfo;
+        buildInfo.NeedNetwork = options.NeedNetwork;
+        buildInfo.StaticScript = options.Script;
+        return Containers[name]->Build(buildInfo);
     }
 
-    TStatus TCoordinator::Exec(const NMessages::TExecOptions&) {
-        return { TStatus::Failed };
+    TStatus TCoordinator::Deserialize(TExecOptionsDeserialized& opts, const std::string& stringJson) {
+        nlohmann::json jsonValue = nlohmann::json::parse(stringJson);
+
+        if (jsonValue.contains("copy_file")) {
+            opts.CopyFiles = jsonValue["copy_file"].array();
+        }
+
+        if (jsonValue.contains("copy_file_names")) {
+            opts.CopyFilesNames = jsonValue["copy_file_names"].array();
+        }
+
+        if (jsonValue.contains("script_file")) {
+            opts.Script = jsonValue["script_file"];
+        }
+
+        return { TStatus::Success };
+    }
+
+    TStatus TCoordinator::Exec(const NMessages::TExecOptions& execOptions) {
+        std::string name = execOptions.name();
+        if (!Containers.contains(name)) {
+            return { TStatus::Failed, MakeString() << "Container with name " << name << " does not exists. "};
+        }
+
+        TExecOptionsDeserialized options;
+
+        if (execOptions.has_is_interactive()) {
+            options.IsInteractive = execOptions.is_interactive();
+        }
+
+        if (execOptions.has_exec_file()) {
+            std::string serializedJson = execOptions.exec_file();
+            Deserialize(options, serializedJson);
+        }
+
+        std::string containerPath = MakeString() << ContainersPath << name;
+        std::string rootfsPath = MakeString() << containerPath << "/rootfs";
+        for (size_t i = 0; i < options.CopyFilesNames.size(); ++i) {
+            const std::string name = options.CopyFilesNames[i];
+            const std::string data = options.CopyFiles[i];
+
+            std::string fullPath = MakeString() << rootfsPath << "/" << name;
+            NOs::CreateFile(fullPath, true, 0755);
+            NOs::WriteToFile(fullPath, data);
+        }
+
+        while (true) {
+            using EState = NContainer::TContainer::EState;
+            if (Containers[name]->GetState() == EState::Exited) {
+                NContainer::TContainer::TExecInfo execInfo;
+                execInfo.NeedNetwork = options.NeedNetwork;
+                execInfo.DynamicScript = options.Script;
+                execInfo.IsInteractive = options.IsInteractive;
+                return Containers[name]->Exec(execInfo);
+            }
+
+            std::this_thread::sleep_for(std::chrono::milliseconds(100));
+        }
     }
 } // namespace NCoordinator

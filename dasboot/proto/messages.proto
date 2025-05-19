@@ -48,3 +48,21 @@ message TAttachOptions {
     optional string id = 2;
     optional bool nostdin = 3;
 }
+
+message TOptionsWrapper {
+    oneof option {
+        TBuildOptions buildOptions = 1;
+        TRunOptions runOptions = 2;
+        TStartOptions startOptions = 3;
+        TStopOptions stopOptions = 4;
+        TPsOptions psOptions = 5;
+        TRmOptions rmOptions = 6;
+        TExecOptions execOptions = 7;
+        TAttachOptions attachOptions = 8;
+    }
+}
+
+message TResult {
+    ReturnCode code = 1;
+    string text = 2;
+}

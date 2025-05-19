@@ -199,11 +199,16 @@ namespace NCli {
         }
         return result;
     }
+    
+    string TConverter::GetFilename(const string& path) {
+        size_t pos = path.find_last_of("/\\");
+        return (pos != string::npos) ? path.substr(pos + 1) : path;
+    }
 
     string TConverter::ReadDasbootFile(const string& path) {
         std::ifstream DasbootFile(path);
         nlohmann::json jsonDasbootFile, resultJson;
-        std::vector<string> CopyFile;
+        std::vector<string> CopyFile, CopyFileNames;
 
         try {
             jsonDasbootFile = nlohmann::json::parse(DasbootFile);
@@ -233,18 +238,21 @@ namespace NCli {
             if (jsonDasbootFile["copy_file"].is_string()) {
                 string result = GetReadFileResult(jsonDasbootFile["copy_file"]);
                 CopyFile.push_back(result);
+                CopyFileNames.push_back(GetFilename(jsonDasbootFile["copy_file"]));
             } 
             else if (jsonDasbootFile["copy_file"].is_array()) {
                 for (const auto& CodePath : jsonDasbootFile["copy_file"]) {
                     if (CodePath.is_string()) {
                         string result = GetReadFileResult(CodePath);
                         CopyFile.push_back(result);
+                        CopyFileNames.push_back(GetFilename(CodePath));
                     } else {
                         throw std::runtime_error("Error: non-string element in copy_file array");
                     }
                 }
             }
             resultJson["copy_file"] = CopyFile;
+            resultJson["copy_file_names"] = CopyFileNames;
         }
 
         return resultJson.dump();
@@ -254,7 +262,7 @@ namespace NCli {
         std::ifstream ExecFile(path);
         nlohmann::json jsonExecFile, resultJson;
         string pathToScript, pathToCopyFile;
-        std::vector<string> CopyFile;
+        std::vector<string> CopyFile, CopyFileNames;
         
         try {
             jsonExecFile = nlohmann::json::parse(ExecFile);
@@ -276,19 +284,23 @@ namespace NCli {
         if (jsonExecFile.contains("copy_file")) {
             if (jsonExecFile["copy_file"].is_string()) {
                 string result = GetReadFileResult(jsonExecFile["copy_file"]);
-                resultJson["copy_file"] = result;
+                CopyFile.push_back(result);
+                CopyFileNames.push_back(GetFilename(jsonExecFile["copy_file"]));
             } 
             else if (jsonExecFile["copy_file"].is_array()) {
                 for (const auto& CodePath : jsonExecFile["copy_file"]) {
                     if (CodePath.is_string()) {
                         string result = GetReadFileResult(CodePath);
                         CopyFile.push_back(result);
+                        CopyFileNames.push_back(GetFilename(CodePath));
                     } else {
                         throw std::runtime_error("Error: non-string element in copy_file array");
                     }
                 }
-                resultJson["copy_file"] = CopyFile;
             }
+            resultJson["copy_file"] = CopyFile;
+            resultJson["copy_file_names"] = CopyFileNames;
+
         }
 
         if (jsonExecFile.contains("script_file")) {

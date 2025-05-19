@@ -118,19 +118,22 @@ TEST(CliUt, GetProtoCommandBuild0) {
 }
 
 TEST(CliUt, GetProtoCommandBuild1) {
-    string DasbootFile = "DasbootFile", ScriptFile = "script.py";
+    string DasbootFile = "DasbootFile", ScriptFile = "script.py", CodeFile = "solve.py";
     NOs::CreateFile(DasbootFile, false, 0700);
     NOs::CreateFile(ScriptFile, false, 0700);
+    NOs::CreateFile(CodeFile, false, 0700);
 
     string input_1 = R"({
 	"network" : true,
-	"script_file" : "script.py"
+	"script_file" : "script.py",
+    "copy_file" : "solve.py"
 })", 
                 input_2 = R"(n = 3
 for i in range(3):
 	print("HELLO!!!"))";
     NOs::WriteToFile(DasbootFile, input_1);
     NOs::WriteToFile(ScriptFile, input_2);
+    NOs::WriteToFile(CodeFile, input_2);
 
     NCli::TMainSettings settings;
     auto parser = NCli::MakeDasbootParser(settings);
@@ -149,8 +152,13 @@ for i in range(3):
 
     NMessages::TBuildOptions ExpectedProtoBuildOptions;
     nlohmann::json resultJson;
+    std::vector<string> CopyFile, CopyFileNames;
+    CopyFile.push_back(input_2);
+    CopyFileNames.push_back(CodeFile);
     resultJson["network"] = true;
     resultJson["script_code"] = input_2;
+    resultJson["copy_file"] = CopyFile;
+    resultJson["copy_file_names"] = CopyFileNames;
     ExpectedProtoBuildOptions.set_dasboot_file(resultJson.dump());
     auto expectedText = ExpectedProtoBuildOptions.DebugString();
 
@@ -610,8 +618,12 @@ TEST(CliUt, GetProtoCommandExec2) {
 
     NMessages::TExecOptions ExpectedProtoExecOptions;
     nlohmann::json resultJson;
+    std::vector<string> CopyFiles, CopyFileNames;
+    CopyFiles.push_back(input_2);
+    CopyFileNames.push_back(CopyFile);
     resultJson["network"] = true;
-    resultJson["copy_file"] = input_2;
+    resultJson["copy_file"] = CopyFiles;
+    resultJson["copy_file_names"] = CopyFileNames;
     resultJson["script_code"] = input_3;
     ExpectedProtoExecOptions.set_exec_file(resultJson.dump());
     auto expectedText = ExpectedProtoExecOptions.DebugString();
@@ -662,10 +674,12 @@ TEST(CliUt, GetProtoCommandExec3) {
 
     NMessages::TExecOptions ExpectedProtoExecOptions;
     nlohmann::json resultJson;
-    std::vector<string> CodeFile;
+    std::vector<string> CodeFile, CodeFileNames;
     CodeFile = {input_2, input_2};
+    CodeFileNames = {CopyFile_1, CopyFile_2};
     resultJson["network"] = true;
     resultJson["copy_file"] = CodeFile;
+    resultJson["copy_file_names"] = CodeFileNames;
     resultJson["script_code"] = input_3;
     ExpectedProtoExecOptions.set_exec_file(resultJson.dump());
     auto expectedText = ExpectedProtoExecOptions.DebugString();

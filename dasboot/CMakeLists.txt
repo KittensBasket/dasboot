@@ -6,10 +6,6 @@ add_subdirectory(app)
 add_subdirectory(proto)
 add_subdirectory(controller)
 
-add_executable(dasboot app/main.cpp)
-apply_compile_flags(dasboot)
-target_link_libraries(dasboot PUBLIC cli)
-target_link_libraries(dasboot PUBLIC controller)
 
 
 # core

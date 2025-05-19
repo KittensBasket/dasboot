@@ -62,6 +62,8 @@ namespace NOs {
     pid_t GetCurrentPid();
     uid_t GetCurrentUid();
 
+    NCommon::TStatus DaemonizeCurrentProcess();
+
     TStatus SetSignalFromParentOnDie(int signal);
 
     class TPipe {
