@@ -217,21 +217,29 @@ namespace {
         return { result, { TStatus::ECode::Success } };
     }
 
-    std::pair<TStatus, std::string> ReadFile(const std::string& path) {
+    std::pair<std::string, NCommon::TStatus> ReadFile(const std::string& path) {
         if (!IsPathExists(path)) {
             std::string error = MakeString() << "Path '" << path << "' does not exists";
-            return {{ TStatus::ECode::Failed, std::move(error) }, ""};
+            return {"",{ NCommon::TStatus::ECode::Failed, std::move(error) }};
         }
 
         if (!IsFile(path)) {
             std::string error = MakeString() << '\'' << path << "' is not file";
-            return {{ TStatus::ECode::Failed, std::move(error) }, ""};
+            return {"", { NCommon::TStatus::ECode::Failed, std::move(error) }};
         }
 
         std::ifstream fin(path, std::ofstream::in);
-        std::string result = "";
-        while (fin >> result);
-        return {{ TStatus::ECode::Success}, result};
+        std::string line, result = "";
+
+        while (std::getline(fin, line)) {
+            result += line + "\n";
+        }
+
+        if (!result.empty()) {
+            result.pop_back();
+        }
+
+        return {result, {NCommon::TStatus::ECode::Success}};
     }
 
     TStatus WriteToFile(const std::string& path, const std::string& text) {
@@ -325,7 +333,7 @@ namespace {
             return { -1, { TStatus::ECode::Failed, error }};
         }
 
-        return { result, { TStatus::ECode::Success }};
+        return { static_cast<pid_t>(result), { TStatus::ECode::Success }};
     }
 
     TStatus PivotRoot(const std::string& rootfs, const std::string& oldRoot) {
