@@ -1,6 +1,8 @@
 #include "daemon.hpp"
 
 #include <dasboot/cru/os.hpp>
+#include <exception>
+#include <iostream>
 #include <messages.pb.h>
 
 #include <fcntl.h>
@@ -21,6 +23,7 @@ TDaemon::TDaemon(const std::string& address) : SocketAddress(address)
 TDaemon::TDaemon(const char* address) : SocketAddress(address)
 {
 	Sock = zmq::socket_t(Ctx, zmq::socket_type::rep);
+	coordinator = NCoordinator::TCoordinator();
 	Sock.bind(std::string("ipc://") + SocketAddress);
 }
 
@@ -108,36 +111,7 @@ void TDaemon::Stop()
 NMessages::TResult TDaemon::DoBuild(const NMessages::TBuildOptions& options)
 {
 	NMessages::TResult result;
-
-	if(options.has_name())
-	{
-		if(NameToId.contains(options.name()))
-		{
-			result.set_code(NMessages::ReturnCode::ERROR);
-			result.set_text("Container with such name already exists");
-		}
-		else
-		{
-			// uint64_t id = NextId++;
-			// NContainer::TContainer container({.id = id});
-
-			// container.Build();
-
-			// Containers.emplace(id, std::move(container));
-
-			// result.set_code(NMessages::ReturnCode::SUCESS);
-			// result.set_text("Container has been successfully built");
-
-			result.set_code(NMessages::ReturnCode::ERROR);
-			result.set_text("Not implemented");
-		}
-	}
-	else
-	{
-		result.set_code(NMessages::ReturnCode::ERROR);
-		result.set_text("No name given");
-	}
-
+	coordinator.Build(options);
 	return result;
 }
 
@@ -274,6 +248,11 @@ NMessages::TResult TDaemon::DoPs([[maybe_unused]] const NMessages::TPsOptions &o
 	result.set_code(NMessages::ReturnCode::SUCESS);
 	result.set_text(text);
 
+	if (coordinator.Ps(options).second.Code == NCommon::TStatus::Success) {
+		result.set_code(NMessages::ReturnCode::SUCESS);
+		result.set_text("Ps was done");
+	}
+
 	return result;
 }
 
@@ -351,6 +330,11 @@ NMessages::TResult TDaemon::DoExec(const NMessages::TExecOptions & options)
 		result.set_code(NMessages::ReturnCode::ERROR);
 		result.set_text("No name or id given");
 	}	
+
+	if (coordinator.Exec(options).Code == NCommon::TStatus::Success) {
+		result.set_code(NMessages::ReturnCode::SUCESS);
+		result.set_text("Exec was done");
+	}
 
 	return result;
 }
