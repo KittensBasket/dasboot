@@ -102,6 +102,7 @@ namespace NCli {
     public:
         static string ReadDasbootFile(const string& path);
         static string ReadExecFile(const string& path, const bool& isInteractive);
+        static string GetFilename(const string& path);
         static NMessages::TRunOptions ConvertRunOptions(const NCli::TRunOptions& options, NMessages::TRunOptions& protoOptions);
         static NMessages::TBuildOptions ConvertBuildOptions(const NCli::TBuildOptions& options, NMessages::TBuildOptions& protoOptions);
         static NMessages::TStartOptions ConvertStartOptions(const NCli::TStartOptions& options, NMessages::TStartOptions& protoOptions);

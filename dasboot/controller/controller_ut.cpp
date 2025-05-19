@@ -178,9 +178,12 @@ TEST(ControllerUt, CommandExec) {
     NMessages::TExecOptions ExpectedExecOptions;
     nlohmann::json resultJson;
     string ExpectedString;
-    std::vector<string> CodeFile, ScriptCode;
+    std::vector<string> CodeFile, CodeFileNames;
+    CodeFile.push_back(input_2);
+    CodeFileNames.push_back(CopyFile);
     resultJson["network"] = true;
-    resultJson["copy_file"] = input_2;
+    resultJson["copy_file"] = CodeFile;
+    resultJson["copy_file_names"] = CodeFileNames;
     resultJson["script_code"] = input_3;
     ExpectedExecOptions.set_name("Container_name");
     ExpectedExecOptions.set_id("Container_id");
