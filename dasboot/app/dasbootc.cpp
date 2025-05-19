@@ -3,6 +3,7 @@
 
 #include <dasboot/cli/cli.hpp>
 #include <dasboot/controller/controller.hpp>
+#include <dasboot/cru/common.hpp>
 
 int main(int argc, char* argv[]) {
     NCli::TMainSettings settings;
@@ -16,7 +17,7 @@ int main(int argc, char* argv[]) {
         return 0;
     }
     
-    NCli::TSender Sender("ipc:///tmp/mysocket"); 
+    NCli::TSender Sender("ipc://" DASBOOTD_SOCK); 
     Sender.SendMainSettings(settings, command);
     
     return 0;

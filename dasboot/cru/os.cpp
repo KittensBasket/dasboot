@@ -369,6 +369,64 @@ namespace {
         return getuid();
     }
 
+    NCommon::TStatus DaemonizeCurrentProcess()
+    {
+        int maxfd, fd;
+
+        switch (fork())
+        {
+        case -1:
+            return {NCommon::TStatus::ECode::Failed, "First fork() failed"};
+        case 0:
+            break;
+        default:
+            _exit(EXIT_SUCCESS);
+        }
+    
+        if (setsid() == -1)
+        {
+            return {NCommon::TStatus::ECode::Failed, "setsid() failed"};
+        }
+    
+        switch (fork())
+        {
+        case -1:
+            return {NCommon::TStatus::ECode::Failed, "Second fork() failed"};
+        case 0:
+            break;
+        default:
+            _exit(EXIT_SUCCESS);
+        }
+    
+        umask(0);
+    
+        chdir("/");
+    
+        maxfd = static_cast<int>(sysconf(_SC_OPEN_MAX));
+        for (fd = 0; fd < maxfd; fd++)
+        {
+            close(fd);
+        }
+    
+        close(STDIN_FILENO);
+    
+        fd = open("/dev/null", O_RDWR);
+        if (fd != STDIN_FILENO)
+        {
+            return {NCommon::TStatus::ECode::Failed, "Failed to open /dev/null"};
+        }
+        if (dup2(STDIN_FILENO, STDOUT_FILENO) != STDOUT_FILENO)
+        {
+            return {NCommon::TStatus::ECode::Failed, "Failed to redirect stdout"};
+        }
+        if (dup2(STDIN_FILENO, STDERR_FILENO) != STDERR_FILENO)
+        {
+            return {NCommon::TStatus::ECode::Failed, "Failed to redirect stderr"};
+        }
+
+	    return {NCommon::TStatus::ECode::Success};
+    }
+
     TStatus SetSignalFromParentOnDie(int signal) {
         if (prctl(PR_SET_PDEATHSIG, signal) == -1) {
             return { TStatus::ECode::Failed, "SetSignalFromParentOnDie() failed" };
