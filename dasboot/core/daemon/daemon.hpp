@@ -1,6 +1,7 @@
 #pragma once
 
 #include <dasboot/core/container/container.hpp>
+#include <dasboot/core/coordinator/coordinator.hpp>
 #include <messages.pb.h>
 #include <unordered_map>
 #include <zmq.hpp>
@@ -29,6 +30,7 @@ class TDaemon final
 
   private:
 	NMessages::TResult GetAndParseRequest();
+
 	void SendResponse(const NMessages::TResult& response);
 
 	void Stop();
@@ -45,6 +47,8 @@ class TDaemon final
 	zmq::context_t Ctx;
 	zmq::socket_t Sock;
 	std::string SocketAddress;
+	NCoordinator::TCoordinator coordinator;
+
 
 	// uint64_t NextId = 0;
 	std::unordered_map<uint64_t, NContainer::TContainer> Containers;

@@ -36,7 +36,7 @@ namespace {
     }
 
     TCoordinator::TCoordinator() {
-        // ImageManager = TImageManager(MainDasbootPath);
+        ImageManager = NImageManager::TImageManager();
 
         if (!NOs::IsDirectoryExists(MainDasbootPath)) {
             NOs::CreateDirectory(MainDasbootPath);
@@ -82,10 +82,11 @@ namespace {
         // in the future there will be any type of image
         std::string alphinePath = ImagesPath + "alpine";
         if (!NOs::IsDirectoryExists(alphinePath)) {
-            // ImageManager.Install();
+            ImageManager.Install(NImageManager::Images::Alpine);
         }
 
         std::string name = buildOptions.name();
+        name = "avooga";
         if (Containers.contains(name)) {
             return { TStatus::Failed, MakeString() << "Container with name " << name << " already exists. "};
         }

@@ -1,4 +1,5 @@
 #include <dasboot/core/container/container.hpp>
+#include "imagemanager.hpp"
 #include <dasboot/cru/common.hpp>
 #include <dasboot/cru/os.hpp>
 #include <messages.pb.h>
@@ -8,7 +9,7 @@ namespace NCoordinator {
     using TStatus = NCommon::TStatus;
 
     class TCoordinator {
-        // TImageManager ImageManager;
+        NImageManager::TImageManager ImageManager;
 
         struct TBuildOptionsDeserialized {
             std::string Name;
