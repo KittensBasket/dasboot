@@ -59,27 +59,29 @@ namespace NCli {
 
     namespace {
         // Dasboot description
-        static const std::string DasbootDescription = "A small containerization utility, written in C/C++. Made as team pet project.";
+        static const string DasbootDescription = "A small containerization utility, written in C/C++. Made as team pet project.";
     
         // Common option descriptions
-        static const std::string ContainerNameDescription = "Container name";
-        static const std::string ContainerIdDescription = "Container ID";
-        static const std::string BuildFromFileDescription = "Create a container from a DasbootFile";
-        static const std::string ShowAllContainersDescription = "List all containers, including stopped ones.";
-        static const std::string DetachFlagDescription = "Detached mode: run command in the background";
-        static const std::string NoStdinFlagDescription = "Do not attach STDIN";
-    
+        static const string ContainerNameDescription = "Container name";
+        static const string ContainerIdDescription = "Container ID";
+        static const string BuildFromFileDescription = "Create a container from a DasbootFile";
+        static const string ShowAllContainersDescription = "List all containers, including stopped ones.";
+        static const string DetachFlagDescription = "Detached mode: run command in the background";
+        static const string NoStdinFlagDescription = "Do not attach STDIN";
+        static const string ExecFileDescription = "Path to ExecFile";
+        static const string InteractiveContainerDescription = "Run container in interactive mode"; //maybe edit
+
         // Command descriptions
-        static const std::string VersionDescription = "Print version information and quit";
-        static const std::string InfoDescription = "Display system-wide information";
-        static const std::string BuildDescription = "Create a container";
-        static const std::string RunDescription = "Run container in interactive mode";
-        static const std::string StartDescription = "Launch a container by name or ID depending on specified options";
-        static const std::string StopDescription = "Terminate a running container";
-        static const std::string PsDescription = "Display all available containers.";
-        static const std::string RmDescription = "Delete a container by name or ID depending on specified options";
-        static const std::string ExecDescription = "Run one or multiple commands inside an already running container";
-        static const std::string AttachDescription = "Connect a terminal to a running container by its ID or name for interactive management and output monitoring";
+        static const string VersionDescription = "Print version information and quit";
+        static const string InfoDescription = "Display system-wide information";
+        static const string BuildDescription = "Create a container";
+        static const string RunDescription = "Run container in interactive mode";
+        static const string StartDescription = "Launch a container by name or ID depending on specified options";
+        static const string StopDescription = "Terminate a running container";
+        static const string PsDescription = "Display all available containers.";
+        static const string RmDescription = "Delete a container by name or ID depending on specified options";
+        static const string ExecDescription = "Run one or multiple commands inside an already running container";
+        static const string AttachDescription = "Connect a terminal to a running container by its ID or name for interactive management and output monitoring";
     } // anonymous namespace
 
     void TParser::RegisterCommands(TMainSettings& mainSettings) {
@@ -112,6 +114,8 @@ namespace NCli {
         AddGlobalCommand("exec", ExecDescription);
         AddLocalOption("exec", "-n", "--name", mainSettings.ExecOptions.Name, ContainerNameDescription);
         AddLocalOption("exec", "-i", "--id", mainSettings.ExecOptions.Id, ContainerIdDescription);
+        AddLocalFlag("exec", "", "--interactive", mainSettings.ExecOptions.IsInteractive, InteractiveContainerDescription);
+        AddLocalOption("exec", "-f", "--file", mainSettings.ExecOptions.ExecFile, ExecFileDescription);
         AddLocalFlag("exec", "-d", "--detach", mainSettings.ExecOptions.Detach, DetachFlagDescription);
 
         AddGlobalCommand("attach", AttachDescription);
@@ -120,10 +124,10 @@ namespace NCli {
         AddLocalFlag("attach", "", "--no-stdin", mainSettings.AttachOptions.NoStdin, NoStdinFlagDescription);
     }
 
-    TSender::TSender(const std::string adress)
+    TSender::TSender(const string adress)
     : Controller(adress) {}
 
-    void TSender::SendMainSettings(const TMainSettings& mainSettings, const std::string& command) {
+    void TSender::SendMainSettings(const TMainSettings& mainSettings, const string& command) {
         if (mainSettings.Version.PrintVersion) {
             //print version -- function in controller
         }
@@ -187,15 +191,133 @@ namespace NCli {
         
     }
 
+    string GetReadFileResult(const string& path) {
+        auto [result, status] = NOs::ReadFile(path);
+        auto [statusCode, errorMsg] = status;
+        if (statusCode == NCommon::TStatus::ECode::Failed) {
+            throw std::runtime_error("Error: " + errorMsg);
+        }
+        return result;
+    }
+
+    string TConverter::ReadDasbootFile(const string& path) {
+        std::ifstream DasbootFile(path);
+        nlohmann::json jsonDasbootFile, resultJson;
+        std::vector<string> CopyFile;
+
+        try {
+            jsonDasbootFile = nlohmann::json::parse(DasbootFile);
+        } catch (const nlohmann::json::parse_error& e) {
+            throw std::runtime_error("JSON parse error: " + string(e.what()));
+        } catch (const std::exception& e) {
+            throw std::runtime_error("Error reading JSON: " + string(e.what()));
+        }
+
+        if (jsonDasbootFile.contains("network")) {
+            if (!jsonDasbootFile["network"].is_boolean()) {
+                throw std::runtime_error("Field 'network' must be boolean (true or false)");
+            }
+            else {
+                resultJson["network"] = jsonDasbootFile["network"];
+            }
+        }
+
+        if (jsonDasbootFile.contains("script_file") && !jsonDasbootFile["script_file"].is_null()) {
+            if (jsonDasbootFile["script_file"].is_string()) {
+                string result = GetReadFileResult(jsonDasbootFile["script_file"]);
+                resultJson["script_code"] = result;
+            } 
+        }
+
+        if (jsonDasbootFile.contains("copy_file") && !jsonDasbootFile["copy_file"].is_null()) {
+            if (jsonDasbootFile["copy_file"].is_string()) {
+                string result = GetReadFileResult(jsonDasbootFile["copy_file"]);
+                CopyFile.push_back(result);
+            } 
+            else if (jsonDasbootFile["copy_file"].is_array()) {
+                for (const auto& CodePath : jsonDasbootFile["copy_file"]) {
+                    if (CodePath.is_string()) {
+                        string result = GetReadFileResult(CodePath);
+                        CopyFile.push_back(result);
+                    } else {
+                        throw std::runtime_error("Error: non-string element in copy_file array");
+                    }
+                }
+            }
+            resultJson["copy_file"] = CopyFile;
+        }
+
+        return resultJson.dump();
+    }
+
+    string TConverter::ReadExecFile(const string& path, const bool& isInteractive) {
+        std::ifstream ExecFile(path);
+        nlohmann::json jsonExecFile, resultJson;
+        string pathToScript, pathToCopyFile;
+        std::vector<string> CopyFile;
+        
+        try {
+            jsonExecFile = nlohmann::json::parse(ExecFile);
+        } catch (const nlohmann::json::parse_error& e) {
+            throw std::runtime_error("JSON parse error: " + string(e.what()));
+        } catch (const std::exception& e) {
+            throw std::runtime_error("Error reading JSON: " + string(e.what()));
+        }
+
+        if (jsonExecFile.contains("network")) {
+            if (!jsonExecFile["network"].is_boolean()) {
+                throw std::runtime_error("Field 'network' must be boolean (true or false)");
+            }
+            else {
+                resultJson["network"] = jsonExecFile["network"];
+            }
+        }
+
+        if (jsonExecFile.contains("copy_file")) {
+            if (jsonExecFile["copy_file"].is_string()) {
+                string result = GetReadFileResult(jsonExecFile["copy_file"]);
+                resultJson["copy_file"] = result;
+            } 
+            else if (jsonExecFile["copy_file"].is_array()) {
+                for (const auto& CodePath : jsonExecFile["copy_file"]) {
+                    if (CodePath.is_string()) {
+                        string result = GetReadFileResult(CodePath);
+                        CopyFile.push_back(result);
+                    } else {
+                        throw std::runtime_error("Error: non-string element in copy_file array");
+                    }
+                }
+                resultJson["copy_file"] = CopyFile;
+            }
+        }
+
+        if (jsonExecFile.contains("script_file")) {
+            if (!isInteractive) {
+                string result = GetReadFileResult(jsonExecFile["script_file"]);
+                resultJson["script_code"] = result;
+            } 
+            else {
+                throw std::runtime_error("When --interactive flag is used, 'script_file' field must not be present");
+            }
+        } else if (!jsonExecFile.contains("script_file") && !isInteractive) {
+            throw std::runtime_error("There must be 'script_file' field");
+        }
+
+        return resultJson.dump();
+    }
+    
     NMessages::TBuildOptions TConverter::ConvertBuildOptions(const NCli::TBuildOptions& options, NMessages::TBuildOptions& protoOptions) {
         if (options.Name.has_value()) {
             protoOptions.set_name(options.Name.value());
         }
 
         if (options.PathToDasbootFile.has_value()) {
-            protoOptions.set_pathtodasbootfile(options.PathToDasbootFile.value());
+            string DasbootFile = ReadDasbootFile(options.PathToDasbootFile.value());
+            protoOptions.set_dasboot_file(DasbootFile);
         }
-
+        else {
+            throw std::runtime_error("Path to DasbootFile must be specified");
+        }
         return protoOptions;
     }
 
@@ -258,6 +380,21 @@ namespace NCli {
 
         if (options.Id.has_value()) {
             protoOptions.set_id(options.Id.value());
+        }
+
+        if (options.IsInteractive) {
+            if (options.ExecFile.has_value()) {
+                string result = ReadExecFile(options.ExecFile.value(), true);
+                protoOptions.set_exec_file(result);
+            }
+            protoOptions.set_is_interactive(options.IsInteractive);
+        }
+        else if (options.ExecFile.has_value()) {
+            string result = ReadExecFile(options.ExecFile.value(), false);
+            protoOptions.set_exec_file(result);
+        }
+        else {
+            throw std::runtime_error("You forgot flag --interactive or ExecFile");
         }
 
         if (options.Detach) {

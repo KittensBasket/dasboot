@@ -34,9 +34,11 @@ namespace NOs {
     bool IsDirectoryExists(const std::string& path);
     bool IsDirectoryEmpty(const std::string& path);
 
-    std::pair<TStatus, std::string> ReadFile(const std::string& path);
-    TStatus WriteToFile(const std::string& path, const std::string& text);
-    TStatus Copy(const std::string& source, const std::string& target);
+    std::pair<std::vector<std::string>, TStatus> GetListOfFiles(const std::string& directoryPath);
+
+    std::pair<std::string, NCommon::TStatus> ReadFile(const std::string& path);
+    NCommon::TStatus WriteToFile(const std::string& path, const std::string& text);
+    NCommon::TStatus Copy(const std::string& source, const std::string& target);
 
     TStatus SetClearEnv();
     TStatus Exec(const std::string& program, const std::vector<std::string>& args = {});

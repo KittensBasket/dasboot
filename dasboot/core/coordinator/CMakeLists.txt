@@ -1,10 +1,16 @@
-# source:
+# sources:
 
-set(SOURCES imagemanager.cpp)
-set(HEADERS imagemanager.hpp)
-add_library(imagemanager ${SOURCES} ${HEADERS})
-apply_compile_flags(imagemanager)
-target_link_libraries(imagemanager PUBLIC curl archive)
+set(SOURCES imagemanager.cpp coordinator.hpp)
+set(HEADERS imagemanager.hpp coordinator.cpp)
+add_library(coordinator ${SOURCES} ${HEADERS})
+apply_compile_flags(coordinator)
+target_link_libraries(coordinator 
+    PUBLIC
+    cru
+    container
+    CURL::libcurl 
+    archive
+)
 
 # tests:
 
@@ -15,9 +21,9 @@ target_link_libraries(
     imagemanager_ut
     PRIVATE
     GTest::gtest
-    imagemanager
+    coordinator
+    CURL::libcurl
     archive
-    curl
 )
 
 gtest_discover_tests(imagemanager_ut)

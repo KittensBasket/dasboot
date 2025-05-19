@@ -4,7 +4,6 @@
 signed main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[]) {
     NContainer::TContainer::TMetaInfo metaInfo;
     metaInfo.RootFsPath = "./rootfs"; // If you want to use it, download it.
-    metaInfo.id = 1;
 
     NContainer::TContainer container(metaInfo);
 

@@ -70,7 +70,7 @@ namespace NContainer {
     public:
         struct TMetaInfo {
             std::string RootFsPath;
-            uint64_t id;
+            std::string Name;
         };
 
         struct TBuildInfo {
@@ -101,12 +101,33 @@ namespace NContainer {
         TContainer& operator=(const TContainer&) = delete;
 
     public:
-        explicit TContainer(const TMetaInfo& metaInfo)
+        explicit TContainer(const TMetaInfo& metaInfo, bool isAlreadyCreated = false)
             : MetaInfo(metaInfo)
-        {}
+        {
+            if (isAlreadyCreated) {
+                State = EState::Exited;
+            }
+        }
 
         EState GetState() const {
             return State;
+        }
+
+        std::string GetStateString() const {
+            switch (State) {
+                case EState::NotInited:
+                    return "Not Inited";
+                case EState::Building:
+                    return "Building";
+                case EState::Exited:
+                    return "Exited";
+                case EState::Running:
+                    return "Running";
+            }
+        }
+
+        std::string GetName() const {
+            return MetaInfo.Name;
         }
 
         TStatus Build(const TBuildInfo& buildInfo);
