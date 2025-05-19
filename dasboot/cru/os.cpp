@@ -197,6 +197,26 @@ namespace {
         return { TStatus::ECode::Success };
     }
 
+    std::pair<std::vector<std::string>, TStatus> GetListOfFiles(const std::string& directoryPath) {
+        if (!IsDirectoryExists(directoryPath)) {
+            std::string error = MakeString() << "Directory " << directoryPath << " does not exists";
+            throw std::runtime_error(error);
+        }
+
+        std::vector<std::string> result;
+
+        try {
+            for (const auto& entry : fs::directory_iterator(directoryPath)) {
+                result.push_back(entry.path().string());
+            }
+        } catch (const fs::filesystem_error& e) {
+            std::string error = MakeString() << "GetListOfFiles() failed: " << e.what();
+            return { {}, { TStatus::ECode::Failed, std::move(error) } };
+        }
+
+        return { result, { TStatus::ECode::Success } };
+    }
+
     std::pair<TStatus, std::string> ReadFile(const std::string& path) {
         if (!IsPathExists(path)) {
             std::string error = MakeString() << "Path '" << path << "' does not exists";
