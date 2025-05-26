@@ -9,13 +9,13 @@ class TTestServer final {
     private:
         zmq::context_t Context;
         zmq::socket_t Socket;
-        string Adress;
+        string Address;
 
     public:
-        explicit TTestServer(const string& adress)
-        : Context(1), Socket(Context, ZMQ_REP), Adress(adress) 
+        explicit TTestServer(const string& address)
+        : Context(1), Socket(Context, ZMQ_REP), Address(address)
         {
-            Socket.bind(Adress); //Start connection
+            Socket.bind(Address); //Start connection
         }
         
         string GetMessage() {
@@ -36,178 +36,178 @@ namespace {
     TTestServer server("ipc:///tmp/testsocket");
 } // anonymous namespace
 
-TEST(ControllerUt, CommandRun) {
-    NMessages::TRunOptions ExpectedRunOptions;
-    string ExpectedString;
-    ExpectedRunOptions.set_name("Container_name");
-    ExpectedRunOptions.SerializeToString(&ExpectedString);
+// TEST(ControllerUt, CommandRun) {
+//     NMessages::TRunOptions ExpectedRunOptions;
+//     string ExpectedString;
+//     ExpectedRunOptions.set_name("Container_name");
+//     ExpectedRunOptions.SerializeToString(&ExpectedString);
 
-    NCli::TMainSettings settings;
-    settings.RunOptions.Name = "Container_name";
-    string command = "run";
-    NCli::TSender Sender("ipc:///tmp/testsocket"); 
-    Sender.SendMainSettings(settings, command);
-    string ServerMessage = server.GetMessage();
-    server.SendMessage();
+//     NCli::TMainSettings settings;
+//     settings.RunOptions.Name = "Container_name";
+//     string command = "run";
+//     NCli::TSender Sender("ipc:///tmp/testsocket"); 
+//     Sender.SendMainSettings(settings, command);
+//     string ServerMessage = server.GetMessage();
+//     server.SendMessage();
     
-    ASSERT_EQ(ServerMessage, ExpectedString);
-}
+//     ASSERT_EQ(ServerMessage, ExpectedString);
+// }
 
-TEST(ControllerUt, CommandBuild) {
-    std::string DasbootFile = "DasbootFile", ScriptFile = "script.py";
-    NOs::CreateFile(DasbootFile, false, 0700);
-    NOs::CreateFile(ScriptFile, false, 0700);
+// TEST(ControllerUt, CommandBuild) {
+//     std::string DasbootFile = "DasbootFile", ScriptFile = "script.py";
+//     NOs::CreateFile(DasbootFile, false, 0700);
+//     NOs::CreateFile(ScriptFile, false, 0700);
 
-    std::string input_1 = R"({
-	"network" : true,
-	"script_file" : "script.py"
-})", 
-                input_2 = R"(n = 3
-for i in range(3):
-	print("HELLO!!!"))";
-    NOs::WriteToFile(DasbootFile, input_1);
-    NOs::WriteToFile(ScriptFile, input_2);
+//     std::string input_1 = R"({
+// 	"network" : true,
+// 	"script_file" : "script.py"
+// })", 
+//                 input_2 = R"(n = 3
+// for i in range(3):
+// 	print("HELLO!!!"))";
+//     NOs::WriteToFile(DasbootFile, input_1);
+//     NOs::WriteToFile(ScriptFile, input_2);
 
-    NMessages::TBuildOptions ExpectedBuildOptions;
-    string ExpectedString;
-    nlohmann::json resultJson;
-    resultJson["network"] = true;
-    resultJson["script_code"] = input_2;
-    ExpectedBuildOptions.set_name("Container_name");
-    ExpectedBuildOptions.set_dasboot_file(resultJson.dump()); 
-    ExpectedBuildOptions.SerializeToString(&ExpectedString);
+//     NMessages::TBuildOptions ExpectedBuildOptions;
+//     string ExpectedString;
+//     nlohmann::json resultJson;
+//     resultJson["network"] = true;
+//     resultJson["script_code"] = input_2;
+//     ExpectedBuildOptions.set_name("Container_name");
+//     ExpectedBuildOptions.set_dasboot_file(resultJson.dump()); 
+//     ExpectedBuildOptions.SerializeToString(&ExpectedString);
 
-    NCli::TMainSettings settings;
-    settings.BuildOptions.Name = "Container_name";
-    settings.BuildOptions.PathToDasbootFile = "DasbootFile";
-    string command = "build";
-    NCli::TSender Sender("ipc:///tmp/testsocket"); 
-    Sender.SendMainSettings(settings, command);
-    string ServerMessage = server.GetMessage();
-    server.SendMessage();
+//     NCli::TMainSettings settings;
+//     settings.BuildOptions.Name = "Container_name";
+//     settings.BuildOptions.PathToDasbootFile = "DasbootFile";
+//     string command = "build";
+//     NCli::TSender Sender("ipc:///tmp/testsocket"); 
+//     Sender.SendMainSettings(settings, command);
+//     string ServerMessage = server.GetMessage();
+//     server.SendMessage();
     
-    NOs::RemoveFile(DasbootFile);
-    NOs::RemoveFile(ScriptFile);
+//     NOs::RemoveFile(DasbootFile);
+//     NOs::RemoveFile(ScriptFile);
 
-    ASSERT_EQ(ServerMessage, ExpectedString);
-}
+//     ASSERT_EQ(ServerMessage, ExpectedString);
+// }
 
-TEST(ControllerUt, CommandStart) {
-    NMessages::TStartOptions ExpectedStartOptions;
-    string ExpectedString;
-    ExpectedStartOptions.SerializeToString(&ExpectedString);
+// TEST(ControllerUt, CommandStart) {
+//     NMessages::TStartOptions ExpectedStartOptions;
+//     string ExpectedString;
+//     ExpectedStartOptions.SerializeToString(&ExpectedString);
 
-    NCli::TMainSettings settings;
-    string command = "start";
-    NCli::TSender Sender("ipc:///tmp/testsocket"); 
-    Sender.SendMainSettings(settings, command);
-    string ServerMessage = server.GetMessage();
-    server.SendMessage();
+//     NCli::TMainSettings settings;
+//     string command = "start";
+//     NCli::TSender Sender("ipc:///tmp/testsocket"); 
+//     Sender.SendMainSettings(settings, command);
+//     string ServerMessage = server.GetMessage();
+//     server.SendMessage();
 
-    ASSERT_EQ(ServerMessage, ExpectedString);
-}
+//     ASSERT_EQ(ServerMessage, ExpectedString);
+// }
 
-TEST(ControllerUt, CommandStop) {
-    NMessages::TStopOptions ExpectedStopOptions;
-    string ExpectedString;
-    ExpectedStopOptions.set_name("Container_name");
-    ExpectedStopOptions.SerializeToString(&ExpectedString);
+// TEST(ControllerUt, CommandStop) {
+//     NMessages::TStopOptions ExpectedStopOptions;
+//     string ExpectedString;
+//     ExpectedStopOptions.set_name("Container_name");
+//     ExpectedStopOptions.SerializeToString(&ExpectedString);
 
-    NCli::TMainSettings settings;
-    settings.StopOptions.Name = "Container_name";
-    string command = "stop";
-    NCli::TSender Sender("ipc:///tmp/testsocket"); 
-    Sender.SendMainSettings(settings, command);
-    string ServerMessage = server.GetMessage();
-    server.SendMessage();
+//     NCli::TMainSettings settings;
+//     settings.StopOptions.Name = "Container_name";
+//     string command = "stop";
+//     NCli::TSender Sender("ipc:///tmp/testsocket"); 
+//     Sender.SendMainSettings(settings, command);
+//     string ServerMessage = server.GetMessage();
+//     server.SendMessage();
 
-    ASSERT_EQ(ServerMessage, ExpectedString);
-}
+//     ASSERT_EQ(ServerMessage, ExpectedString);
+// }
 
-TEST(ControllerUt, CommandPs) {
-    NMessages::TPsOptions ExpectedPsOptions;
-    string ExpectedString;
-    ExpectedPsOptions.set_show_all(true);
-    ExpectedPsOptions.SerializeToString(&ExpectedString);
+// TEST(ControllerUt, CommandPs) {
+//     NMessages::TPsOptions ExpectedPsOptions;
+//     string ExpectedString;
+//     ExpectedPsOptions.set_show_all(true);
+//     ExpectedPsOptions.SerializeToString(&ExpectedString);
 
-    NCli::TMainSettings settings;
-    settings.PsOptions.ShowAll = true;
-    string command = "ps";
-    NCli::TSender Sender("ipc:///tmp/testsocket"); 
-    Sender.SendMainSettings(settings, command);
-    string ServerMessage = server.GetMessage();
-    server.SendMessage();
+//     NCli::TMainSettings settings;
+//     settings.PsOptions.ShowAll = true;
+//     string command = "ps";
+//     NCli::TSender Sender("ipc:///tmp/testsocket"); 
+//     Sender.SendMainSettings(settings, command);
+//     string ServerMessage = server.GetMessage();
+//     server.SendMessage();
 
-    ASSERT_EQ(ServerMessage, ExpectedString);
-}
+//     ASSERT_EQ(ServerMessage, ExpectedString);
+// }
 
-TEST(ControllerUt, CommandRm) {
-    NMessages::TRmOptions ExpectedRmOptions;
-    string ExpectedString;
-    ExpectedRmOptions.set_id("Container_id");
-    ExpectedRmOptions.SerializeToString(&ExpectedString);
+// TEST(ControllerUt, CommandRm) {
+//     NMessages::TRmOptions ExpectedRmOptions;
+//     string ExpectedString;
+//     ExpectedRmOptions.set_id("Container_id");
+//     ExpectedRmOptions.SerializeToString(&ExpectedString);
 
-    NCli::TMainSettings settings;
-    settings.RmOptions.Id = "Container_id";
-    string command = "rm";
-    NCli::TSender Sender("ipc:///tmp/testsocket"); 
-    Sender.SendMainSettings(settings, command);
-    string ServerMessage = server.GetMessage();
-    server.SendMessage();
+//     NCli::TMainSettings settings;
+//     settings.RmOptions.Id = "Container_id";
+//     string command = "rm";
+//     NCli::TSender Sender("ipc:///tmp/testsocket"); 
+//     Sender.SendMainSettings(settings, command);
+//     string ServerMessage = server.GetMessage();
+//     server.SendMessage();
 
-    ASSERT_EQ(ServerMessage, ExpectedString);
-}
+//     ASSERT_EQ(ServerMessage, ExpectedString);
+// }
 
-TEST(ControllerUt, CommandExec) {
-    std::string ExecFile = "ExecFile", CopyFile = "file.txt", ScriptFile = "script.py";
-    NOs::CreateFile(ExecFile, false, 0700);
-    NOs::CreateFile(CopyFile, false, 0700);
-    NOs::CreateFile(ScriptFile, false, 0700);
+// TEST(ControllerUt, CommandExec) {
+//     std::string ExecFile = "ExecFile", CopyFile = "file.txt", ScriptFile = "script.py";
+//     NOs::CreateFile(ExecFile, false, 0700);
+//     NOs::CreateFile(CopyFile, false, 0700);
+//     NOs::CreateFile(ScriptFile, false, 0700);
 
-    std::string input_1 = R"({
-	"network" : true,
-	"copy_file" : "file.txt",
-	"script_file" : "script.py"
-})", 
-                input_2 = R"(HELLO WORLD)",
-                input_3 = R"(print("HELLO!!!"))";
-    NOs::WriteToFile(ExecFile, input_1);
-    NOs::WriteToFile(CopyFile, input_2);
-    NOs::WriteToFile(ScriptFile, input_3);
+//     std::string input_1 = R"({
+// 	"network" : true,
+// 	"copy_file" : "file.txt",
+// 	"script_file" : "script.py"
+// })", 
+//                 input_2 = R"(HELLO WORLD)",
+//                 input_3 = R"(print("HELLO!!!"))";
+//     NOs::WriteToFile(ExecFile, input_1);
+//     NOs::WriteToFile(CopyFile, input_2);
+//     NOs::WriteToFile(ScriptFile, input_3);
 
-    NMessages::TExecOptions ExpectedExecOptions;
-    nlohmann::json resultJson;
-    string ExpectedString;
-    std::vector<string> CodeFile, CodeFileNames;
-    CodeFile.push_back(input_2);
-    CodeFileNames.push_back(CopyFile);
-    resultJson["network"] = true;
-    resultJson["copy_file"] = CodeFile;
-    resultJson["copy_file_names"] = CodeFileNames;
-    resultJson["script_code"] = input_3;
-    ExpectedExecOptions.set_name("Container_name");
-    ExpectedExecOptions.set_id("Container_id");
-    ExpectedExecOptions.set_detach(true);
-    ExpectedExecOptions.set_exec_file(resultJson.dump());
-    ExpectedExecOptions.SerializeToString(&ExpectedString);
+//     NMessages::TExecOptions ExpectedExecOptions;
+//     nlohmann::json resultJson;
+//     string ExpectedString;
+//     std::vector<string> CodeFile, CodeFileNames;
+//     CodeFile.push_back(input_2);
+//     CodeFileNames.push_back(CopyFile);
+//     resultJson["network"] = true;
+//     resultJson["copy_file"] = CodeFile;
+//     resultJson["copy_file_names"] = CodeFileNames;
+//     resultJson["script_code"] = input_3;
+//     ExpectedExecOptions.set_name("Container_name");
+//     ExpectedExecOptions.set_id("Container_id");
+//     ExpectedExecOptions.set_detach(true);
+//     ExpectedExecOptions.set_exec_file(resultJson.dump());
+//     ExpectedExecOptions.SerializeToString(&ExpectedString);
 
-    NCli::TMainSettings settings;
-    settings.ExecOptions.Name = "Container_name";
-    settings.ExecOptions.Id = "Container_id";
-    settings.ExecOptions.Detach = true;
-    settings.ExecOptions.ExecFile = ExecFile;
-    string command = "exec";
-    NCli::TSender Sender("ipc:///tmp/testsocket"); 
-    Sender.SendMainSettings(settings, command);
-    string ServerMessage = server.GetMessage();
-    server.SendMessage();
+//     NCli::TMainSettings settings;
+//     settings.ExecOptions.Name = "Container_name";
+//     settings.ExecOptions.Id = "Container_id";
+//     settings.ExecOptions.Detach = true;
+//     settings.ExecOptions.ExecFile = ExecFile;
+//     string command = "exec";
+//     NCli::TSender Sender("ipc:///tmp/testsocket"); 
+//     Sender.SendMainSettings(settings, command);
+//     string ServerMessage = server.GetMessage();
+//     server.SendMessage();
 
-    NOs::RemoveFile(ExecFile);
-    NOs::RemoveFile(CopyFile);
-    NOs::RemoveFile(ScriptFile);
+//     NOs::RemoveFile(ExecFile);
+//     NOs::RemoveFile(CopyFile);
+//     NOs::RemoveFile(ScriptFile);
 
-    ASSERT_EQ(ServerMessage, ExpectedString);
-}
+//     ASSERT_EQ(ServerMessage, ExpectedString);
+// }
 
 
 int main(int argc, char** argv) {

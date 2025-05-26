@@ -52,35 +52,43 @@ NMessages::TResult TDaemon::GetAndParseRequest()
 	}
 
 	NMessages::TOptionsWrapper wrapper;
-	wrapper.ParseFromString(request.to_string());
+
+    wrapper.ParseFromString(request.to_string());
 
 	switch(wrapper.option_case())
 	{
-		case NMessages::TOptionsWrapper::OptionCase::kBuildOptions:
-			result = DoBuild(wrapper.buildoptions());
+		case NMessages::TOptionsWrapper::OptionCase::kBuildOptions: {
+			result = DoBuild(wrapper.build_options());
 			break;
-		case NMessages::TOptionsWrapper::OptionCase::kRunOptions:
-			result = DoRun(wrapper.runoptions());
+        }
+		case NMessages::TOptionsWrapper::OptionCase::kRunOptions: {
+			result = DoRun(wrapper.run_options());
+            break;
+        }
+		case NMessages::TOptionsWrapper::OptionCase::kStartOptions: {
+			result = DoStart(wrapper.start_options());
 			break;
-		case NMessages::TOptionsWrapper::OptionCase::kStartOptions:
-			result = DoStart(wrapper.startoptions());
+        }
+		case NMessages::TOptionsWrapper::OptionCase::kStopOptions: {
+			result = DoStop(wrapper.stop_options());
 			break;
-		case NMessages::TOptionsWrapper::OptionCase::kStopOptions:
-			result = DoStop(wrapper.stopoptions());
+        }
+		case NMessages::TOptionsWrapper::OptionCase::kPsOptions: {
+			result = DoPs(wrapper.ps_options());
 			break;
-		case NMessages::TOptionsWrapper::OptionCase::kPsOptions:
-			result = DoPs(wrapper.psoptions());
+        }
+		case NMessages::TOptionsWrapper::OptionCase::kRmOptions: {
+			result = DoRm(wrapper.rm_options());
 			break;
-		case NMessages::TOptionsWrapper::OptionCase::kRmOptions:
-			result = DoRm(wrapper.rmoptions());
+        }
+		case NMessages::TOptionsWrapper::OptionCase::kExecOptions: {
+			result = DoExec(wrapper.exec_options());
 			break;
-		case NMessages::TOptionsWrapper::OptionCase::kExecOptions:
-			result = DoExec(wrapper.execoptions());
-			break;
-		case NMessages::TOptionsWrapper::OptionCase::kAttachOptions:
-			result = DoAttach(wrapper.attachoptions());
-			break;
-	
+        }
+		case NMessages::TOptionsWrapper::OptionCase::kAttachOptions: {
+			result = DoAttach(wrapper.attach_options());
+            break;
+        }
 		default:
 			result.set_code(NMessages::ReturnCode::ERROR);
 			result.set_text("Unknown request");

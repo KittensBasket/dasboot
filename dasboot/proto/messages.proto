@@ -51,14 +51,14 @@ message TAttachOptions {
 
 message TOptionsWrapper {
     oneof option {
-        TBuildOptions buildOptions = 1;
-        TRunOptions runOptions = 2;
-        TStartOptions startOptions = 3;
-        TStopOptions stopOptions = 4;
-        TPsOptions psOptions = 5;
-        TRmOptions rmOptions = 6;
-        TExecOptions execOptions = 7;
-        TAttachOptions attachOptions = 8;
+        TBuildOptions build_options = 1;
+        TRunOptions run_options = 2;
+        TStartOptions start_options = 3;
+        TStopOptions stop_options = 4;
+        TPsOptions ps_options = 5;
+        TRmOptions rm_options = 6;
+        TExecOptions exec_options = 7;
+        TAttachOptions attach_options = 8;
     }
 }
 

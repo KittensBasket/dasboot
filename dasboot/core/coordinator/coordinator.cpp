@@ -71,8 +71,12 @@ namespace {
             opts.CopyFilesNames = jsonValue["copy_file_names"].array();
         }
 
-        if (jsonValue.contains("script_file")) {
-            opts.Script = jsonValue["script_file"];
+        if (jsonValue.contains("script_code")) {
+            opts.Script = jsonValue["script_code"];
+        }
+
+        if (jsonValue.contains("network")) {
+            opts.NeedNetwork = jsonValue["network"];
         }
 
         return { TStatus::Success };
@@ -86,7 +90,7 @@ namespace {
         }
 
         std::string name = buildOptions.name();
-        name = "avooga";
+
         if (Containers.contains(name)) {
             return { TStatus::Failed, MakeString() << "Container with name " << name << " already exists. "};
         }
@@ -101,7 +105,11 @@ namespace {
         Deserialize(options, serializedJson);
 
         std::string rootfsPath = MakeString() << containerPath << "/rootfs";
-        NOs::Copy(alphinePath, rootfsPath);
+        auto copyStatus = NOs::Copy(alphinePath, rootfsPath);
+
+        if (copyStatus.Code != TStatus::Success) {
+            return { TStatus::Failed, MakeString() << "Failed to copy image: " << copyStatus.Error };
+        }
 
         for (size_t i = 0; i < options.CopyFilesNames.size(); ++i) {
             const std::string name = options.CopyFilesNames[i];
@@ -134,8 +142,8 @@ namespace {
             opts.CopyFilesNames = jsonValue["copy_file_names"].array();
         }
 
-        if (jsonValue.contains("script_file")) {
-            opts.Script = jsonValue["script_file"];
+        if (jsonValue.contains("script_code")) {
+            opts.Script = jsonValue["script_code"];
         }
 
         return { TStatus::Success };

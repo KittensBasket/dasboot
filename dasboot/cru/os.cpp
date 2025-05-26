@@ -270,8 +270,10 @@ namespace {
             return { TStatus::ECode::Failed, std::move(error) };
         }
 
+        std::cout << "Copying from " << source << " to " << target << std::endl;
+
         try {
-            fs::copy(source, target);
+            fs::copy(source, target, fs::copy_options::recursive | fs::copy_options::overwrite_existing | fs::copy_options::copy_symlinks);
         } catch (const fs::filesystem_error& e) {
             std::string error = MakeString() << "Copy() failed: " << e.what();
             return { TStatus::ECode::Failed, std::move(error) };

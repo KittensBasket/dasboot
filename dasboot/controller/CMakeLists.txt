@@ -4,9 +4,16 @@ set(SOURCES controller.cpp)
 set(HEADERS controller.hpp)
 add_library(controller ${SOURCES} ${HEADERS})
 apply_compile_flags(controller)
-target_link_libraries(controller PUBLIC ProtobufMessages)
+
+target_link_libraries(
+    controller
+    PUBLIC
+    ProtobufMessages
+    cru
+    cppzmq
+)
+
 add_dependencies(controller ProtobufMessages)
-target_link_libraries(controller PUBLIC cppzmq)
 
 # tests:
 

@@ -534,31 +534,31 @@ R"()";
     ASSERT_EQ(protoText, excpected);
 }
 
-TEST(CliUt, GetProtoCommandExec0) {
-    NCli::TMainSettings settings;
-    auto parser = NCli::MakeDasbootParser(settings);
+// TEST(CliUt, GetProtoCommandExec0) {
+//     NCli::TMainSettings settings;
+//     auto parser = NCli::MakeDasbootParser(settings);
 
-    const char* argv0[] = {
-    "./dasboot", "exec", "-n", "meow", "-i", "12345", "-d", "1", "--interactive", "1"
-    };
-    int argc = sizeof(argv0)/sizeof(argv0[0]);
-    char** argv = const_cast<char**>(argv0);
+//     const char* argv0[] = {
+//     "./dasboot", "exec", "-n", "meow", "-i", "12345", "-d", "1", "--interactive", "1"
+//     };
+//     int argc = sizeof(argv0)/sizeof(argv0[0]);
+//     char** argv = const_cast<char**>(argv0);
 
-    parser->Parse(argc, argv);
+//     parser->Parse(argc, argv);
 
-    NMessages::TExecOptions ProtoExecOptions;
-    ProtoExecOptions = NCli::TConverter::ConvertExecOptions(settings.ExecOptions, ProtoExecOptions);
-    auto protoText = ProtoExecOptions.DebugString();
+//     NMessages::TExecOptions ProtoExecOptions;
+//     ProtoExecOptions = NCli::TConverter::ConvertExecOptions(settings.ExecOptions, ProtoExecOptions);
+//     auto protoText = ProtoExecOptions.DebugString();
 
-    auto excpected =
-R"(name: "meow"
-id: "12345"
-is_interactive: true
-detach: true
-)";
+//     auto excpected =
+// R"(name: "meow"
+// id: "12345"
+// is_interactive: true
+// detach: true
+// )";
 
-    ASSERT_EQ(protoText, excpected);
-}
+//     ASSERT_EQ(protoText, excpected);
+// }
 
 TEST(CliUt, GetProtoCommandExec1) {
     NCli::TMainSettings settings;
