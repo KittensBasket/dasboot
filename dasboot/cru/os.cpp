@@ -259,18 +259,16 @@ namespace {
         return { TStatus::ECode::Success };
     }
 
-    TStatus Copy(const std::string& source, const std::string& target) {
+    TStatus Copy(const std::string& source, const std::string& target, bool force) {
         if (!IsPathExists(source)) {
             std::string error = MakeString() << "Source file \'" << source << "\' does not exists";
             return { TStatus::ECode::Failed, std::move(error) };
         }
 
-        if (IsPathExists(target)) {
+        if (!force && IsPathExists(target)) {
             std::string error = MakeString() << "Target file \'" << target << "\' already exists";
             return { TStatus::ECode::Failed, std::move(error) };
         }
-
-        std::cout << "Copying from " << source << " to " << target << std::endl;
 
         try {
             fs::copy(source, target, fs::copy_options::recursive | fs::copy_options::overwrite_existing | fs::copy_options::copy_symlinks);

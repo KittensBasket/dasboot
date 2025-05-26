@@ -38,7 +38,7 @@ namespace NOs {
 
     std::pair<std::string, NCommon::TStatus> ReadFile(const std::string& path);
     NCommon::TStatus WriteToFile(const std::string& path, const std::string& text);
-    NCommon::TStatus Copy(const std::string& source, const std::string& target);
+    NCommon::TStatus Copy(const std::string& source, const std::string& target, bool force = false);
 
     TStatus SetClearEnv();
     TStatus Exec(const std::string& program, const std::vector<std::string>& args = {});
