@@ -123,7 +123,7 @@ namespace NContainer { // TIsolateProcessCreator implemenation
         if (RunTimeInfo.NeedNetwork) {
             std::string source = "/etc/resolv.conf";
             std::string target = std::string(MakeString() << RunTimeInfo.RootFsPath << "/etc/resolv.conf");
-            auto status = NOs::Copy(source, target);
+            auto status = NOs::Copy(source, target, true);
 
             if (status.Code != TStatus::Success) {
                 status.Error = "TByPidPreparator::Prepare: " + status.Error;

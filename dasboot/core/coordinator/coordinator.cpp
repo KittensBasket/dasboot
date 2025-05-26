@@ -146,6 +146,10 @@ namespace {
             opts.Script = jsonValue["script_code"];
         }
 
+        if (jsonValue.contains("network")) {
+            opts.NeedNetwork = jsonValue["network"];
+        }
+
         return { TStatus::Success };
     }
 
