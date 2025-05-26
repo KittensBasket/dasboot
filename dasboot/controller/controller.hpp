@@ -8,6 +8,8 @@
 
 #include <messages.pb.h>
 
+#include <dasboot/cru/common.hpp>
+
 namespace NController {
     using std::string;
 
@@ -15,10 +17,10 @@ namespace NController {
         private:
             zmq::context_t Context;
             zmq::socket_t Socket;
-            std::string Adress;
+            std::string Address;
 
         public:
-            TController(const std::string& adress);
+            TController(const std::string& address);
 
             void StartConnection();
             void WriteToDaemon(std::string& message);

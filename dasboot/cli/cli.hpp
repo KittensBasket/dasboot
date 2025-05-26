@@ -101,7 +101,7 @@ namespace NCli {
     class TConverter {
     public:
         static string ReadDasbootFile(const string& path);
-        static string ReadExecFile(const string& path, const bool& isInteractive);
+        static string ReadExecFile(const string& path, bool isInteractive);
         static string GetFilename(const string& path);
         static NMessages::TRunOptions ConvertRunOptions(const NCli::TRunOptions& options, NMessages::TRunOptions& protoOptions);
         static NMessages::TBuildOptions ConvertBuildOptions(const NCli::TBuildOptions& options, NMessages::TBuildOptions& protoOptions);
@@ -117,7 +117,7 @@ namespace NCli {
     private:
         NController::TController Controller;
     public:
-        TSender(string adress);
+        TSender(const string& address);
         void SendMainSettings(const TMainSettings& mainSettings, const string& command);
     };
 

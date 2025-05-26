@@ -332,7 +332,6 @@ namespace NContainer { // TContainer implemenation
         if (!pid) { // child
             pipe.CloseRead();
             if (execInfo.IsInteractive) {
-                std::cout << "Interactive exec" << std::endl;
                 NOs::Exec("/bin/sh");
                 pipe.Write("Interactive exec failed.");
                 exit(1);

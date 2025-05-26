@@ -113,8 +113,8 @@ namespace NCli {
 
         AddGlobalCommand("exec", ExecDescription);
         AddLocalOption("exec", "-n", "--name", mainSettings.ExecOptions.Name, ContainerNameDescription);
-        AddLocalOption("exec", "-i", "--id", mainSettings.ExecOptions.Id, ContainerIdDescription);
-        AddLocalFlag("exec", "", "--interactive", mainSettings.ExecOptions.IsInteractive, InteractiveContainerDescription);
+        AddLocalOption("exec", "-x", "--id", mainSettings.ExecOptions.Id, ContainerIdDescription);
+        AddLocalFlag("exec", "-i", "--interactive", mainSettings.ExecOptions.IsInteractive, InteractiveContainerDescription);
         AddLocalOption("exec", "-f", "--file", mainSettings.ExecOptions.ExecFile, ExecFileDescription);
         AddLocalFlag("exec", "-d", "--detach", mainSettings.ExecOptions.Detach, DetachFlagDescription);
 
@@ -124,8 +124,9 @@ namespace NCli {
         AddLocalFlag("attach", "", "--no-stdin", mainSettings.AttachOptions.NoStdin, NoStdinFlagDescription);
     }
 
-    TSender::TSender(const string adress)
-    : Controller(adress) {}
+    TSender::TSender(const string& address)
+        : Controller(address)
+    {}
 
     void TSender::SendMainSettings(const TMainSettings& mainSettings, const string& command) {
         if (mainSettings.Version.PrintVersion) {
@@ -258,7 +259,7 @@ namespace NCli {
         return resultJson.dump();
     }
 
-    string TConverter::ReadExecFile(const string& path, const bool& isInteractive) {
+    string TConverter::ReadExecFile(const string& path, bool isInteractive) {
         std::ifstream ExecFile(path);
         nlohmann::json jsonExecFile, resultJson;
         string pathToScript, pathToCopyFile;
@@ -311,7 +312,7 @@ namespace NCli {
             else {
                 throw std::runtime_error("When --interactive flag is used, 'script_file' field must not be present");
             }
-        } else if (!jsonExecFile.contains("script_file") && !isInteractive) {
+        } else if (!isInteractive) {
             throw std::runtime_error("There must be 'script_file' field");
         }
 

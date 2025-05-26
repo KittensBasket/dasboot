@@ -9,13 +9,13 @@ class TTestServer final {
     private:
         zmq::context_t Context;
         zmq::socket_t Socket;
-        string Adress;
+        string Address;
 
     public:
-        explicit TTestServer(const string& adress)
-        : Context(1), Socket(Context, ZMQ_REP), Adress(adress) 
+        explicit TTestServer(const string& address)
+        : Context(1), Socket(Context, ZMQ_REP), Address(address)
         {
-            Socket.bind(Adress); //Start connection
+            Socket.bind(Address); //Start connection
         }
         
         string GetMessage() {

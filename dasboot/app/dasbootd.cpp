@@ -6,15 +6,6 @@
 
 int main()
 {
-	//auto ret = NOs::DaemonizeCurrentProcess();
-	auto ret = NCommon::TStatus();
-	if(ret.Code == NCommon::TStatus::ECode::Failed)
-	{
-		std::cout << "Got error trying to daemonize process: " << ret.Error << std::endl;
-
-		return 1;
-	}
-
 	try
 	{
 		NDaemon::TDaemon daemon(DASBOOTD_SOCK);

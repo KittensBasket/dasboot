@@ -2,64 +2,80 @@
 
 namespace NController {
 
-    void TController::Run(const NMessages::TRunOptions& RunOptions) {
+    void TController::Run(const NMessages::TRunOptions& runOptions) {
         std::string message;
-        RunOptions.SerializeToString(&message);
+        NMessages::TOptionsWrapper optionsWrapper;
+        optionsWrapper.mutable_run_options()->CopyFrom(runOptions);
+        optionsWrapper.SerializeToString(&message);
         StartConnection();
         WriteToDaemon(message);
     }
 
-    void TController::Build(const NMessages::TBuildOptions& BuildOptions) {
+    void TController::Build(const NMessages::TBuildOptions& buildOptions) {
         std::string message;
-        BuildOptions.SerializeToString(&message);
+        NMessages::TOptionsWrapper optionsWrapper;
+        optionsWrapper.mutable_build_options()->CopyFrom(buildOptions);
+        optionsWrapper.SerializeToString(&message);
         StartConnection();
         WriteToDaemon(message);
     }
 
-    void TController::Start(const NMessages::TStartOptions& StartOptions) {
+    void TController::Start(const NMessages::TStartOptions& startOptions) {
         std::string message;
-        StartOptions.SerializeToString(&message);
+        NMessages::TOptionsWrapper optionsWrapper;
+        optionsWrapper.mutable_start_options()->CopyFrom(startOptions);
+        optionsWrapper.SerializeToString(&message);
         StartConnection();
         WriteToDaemon(message);
     }
 
-    void TController::Stop(const NMessages::TStopOptions& StopOptions) {
+    void TController::Stop(const NMessages::TStopOptions& stopOptions) {
         std::string message;
-        StopOptions.SerializeToString(&message);
+        NMessages::TOptionsWrapper optionsWrapper;
+        optionsWrapper.mutable_stop_options()->CopyFrom(stopOptions);
+        optionsWrapper.SerializeToString(&message);
         StartConnection();
         WriteToDaemon(message);
     }
 
-    void TController::Ps(const NMessages::TPsOptions& PsOptions) {
+    void TController::Ps(const NMessages::TPsOptions& psOptions) {
         std::string message;
-        PsOptions.SerializeToString(&message);
+        NMessages::TOptionsWrapper optionsWrapper;
+        optionsWrapper.mutable_ps_options()->CopyFrom(psOptions);
+        optionsWrapper.SerializeToString(&message);
         StartConnection();
         WriteToDaemon(message);
     }
 
-    void TController::Exec(const NMessages::TExecOptions& ExecOptions) {
+    void TController::Exec(const NMessages::TExecOptions& execOptions) {
         std::string message;
-        ExecOptions.SerializeToString(&message);
+        NMessages::TOptionsWrapper optionsWrapper;
+        optionsWrapper.mutable_exec_options()->CopyFrom(execOptions);
+        optionsWrapper.SerializeToString(&message);
         StartConnection();
         WriteToDaemon(message);
     }
 
-    void TController::Rm(const NMessages::TRmOptions& RmOptions) {
+    void TController::Rm(const NMessages::TRmOptions& rmOptions) {
         std::string message;
-        RmOptions.SerializeToString(&message);
+        NMessages::TOptionsWrapper optionsWrapper;
+        optionsWrapper.mutable_rm_options()->CopyFrom(rmOptions);
+        optionsWrapper.SerializeToString(&message);
         StartConnection();
         WriteToDaemon(message);
     }
 
 
-    TController::TController(const std::string& adress)
-    :
-    Context(1), Socket(Context, ZMQ_REQ),  Adress(adress)
-    {}
+    TController::TController(const std::string& address)
+    : Context(1)
+    , Socket(Context, ZMQ_REQ)
+    , Address(address)
+    {
+    }
 
 
     void TController::StartConnection() {
-        Socket.connect(Adress);
+        Socket.connect(Address);
     }
 
     void TController::WriteToDaemon(std::string& message) {
